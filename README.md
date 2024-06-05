@@ -10,11 +10,11 @@ Cours (la racinne de tous les cours) = "course"
 Quand on ouvre un pdf (en general) = "pluginfile"
 
 ### Avec le "/mod/"
-VPL (en algorithme) = "vpl"
-Quizz = "quiz"
-Presence = "attendance"
-Page = "page" | Book = "book"
-Ressources (dl) = "resource"
+VPL (en algorithme) = "vpl"__
+Quizz = "quiz"__
+Presence = "attendance"__
+Page = "page" | Book = "book"__
+Ressources (dl) = "resource"__
 
 ### Quiz : 
 - Quand on est sur la racinne de la page = "view"
