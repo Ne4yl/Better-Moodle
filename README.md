@@ -10,7 +10,7 @@ Pour s'inscrire a un cour = "enrol" <br>
 Cours (la racinne de tous les cours) = "course" <br>
 Quand on ouvre un pdf (en general) = "pluginfile" <br>
 
-### Avec le "/mod/"
+### Avec le "mod/"
 VPL (en algorithme) = "vpl" <br>
 Quizz = "quiz" <br>
 Presence = "attendance" <br>
