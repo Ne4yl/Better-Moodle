@@ -10,6 +10,11 @@ Pour s'inscrire a un cour = "enrol/" <br>
 Cours (la racinne de tous les cours) = "course/" <br>
 Quand on ouvre un pdf (en general) = "pluginfile:" <br>
 
+## Dans un cours ("course/")
+- Pour le cours (root) = "course/"
+- Pour les participants = "user/"
+- Pour les notes = "grade/report/user/"
+
 ### Avec le "mod/"
 VPL (en algorithme) = "vpl/" <br>
 Quizz = "quiz/" <br>
