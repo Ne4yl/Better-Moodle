@@ -4,17 +4,17 @@ Upgrade for ESIEA ENT
 ## Explication des URL : 
 - Origin = "https://learning.esiea.fr/"
 
-Le tableau de bord = "my/"
-Pour s'inscrire a un cour = "enrol"
-Cours (la racinne de tous les cours) = "course"
-Quand on ouvre un pdf (en general) = "pluginfile"
+Le tableau de bord = "my/" <br>
+Pour s'inscrire a un cour = "enrol" <br>
+Cours (la racinne de tous les cours) = "course" <br>
+Quand on ouvre un pdf (en general) = "pluginfile" <br>
 
 ### Avec le "/mod/"
 VPL (en algorithme) = "vpl" <br>
-Quizz = "quiz"\
-Presence = "attendance"<br/>
-Page = "page" | Book = "book"__
-Ressources (dl) = "resource"__
+Quizz = "quiz" <br>
+Presence = "attendance" <br>
+Page = "page" | Book = "book" <br>
+Ressources (dl) = "resource" <br>
 
 ### Quiz : 
 - Quand on est sur la racinne de la page = "view"
