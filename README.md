@@ -4,6 +4,7 @@ Upgrade for ESIEA ENT
 ## Explication des URL : 
 - Origin = "https://learning.esiea.fr/"
 
+Le login = "login/" <br>
 Le tableau de bord = "my/" <br>
 Pour s'inscrire a un cour = "enrol" <br>
 Cours (la racinne de tous les cours) = "course" <br>
