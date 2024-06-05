@@ -6,21 +6,21 @@ Upgrade for ESIEA ENT
 
 Le login = "login/" <br>
 Le tableau de bord = "my/" <br>
-Pour s'inscrire a un cour = "enrol" <br>
-Cours (la racinne de tous les cours) = "course" <br>
-Quand on ouvre un pdf (en general) = "pluginfile" <br>
+Pour s'inscrire a un cour = "enrol/" <br>
+Cours (la racinne de tous les cours) = "course/" <br>
+Quand on ouvre un pdf (en general) = "pluginfile:" <br>
 
 ### Avec le "mod/"
-VPL (en algorithme) = "vpl" <br>
-Quizz = "quiz" <br>
-Presence = "attendance" <br>
-Page = "page" | Book = "book" <br>
-Ressources (dl) = "resource" <br>
+VPL (en algorithme) = "vpl/" <br>
+Quizz = "quiz/" <br>
+Presence = "attendance/" <br>
+Page = "page" | Book = "book/" <br>
+Ressources (dl) = "resource/" <br>
 
 ### Quiz : 
-- Quand on est sur la racinne de la page = "view"
-- Quand on fait un essai = "attempt"
-- Quand on fait une relecture = "review"
+- Quand on est sur la racinne de la page = "view/"
+- Quand on fait un essai = "attempt/"
+- Quand on fait une relecture = "review/"
 
 ### Algo : ("https://learning.esiea.fr/course/view.php?")
 - S1 = "id=323"
