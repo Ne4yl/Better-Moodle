@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "Better Moodle",
+    "version": "1.0",
+    "description": "A better Moodle experience",
+    "permissions": [
+        "scripting",
+        "activeTab"
+    ],
+    "content_scripts": [
+        {
+            "run_at": "document_end",
+            "matches": ["https://learning.esiea.fr/*"],
+            "js": ["content.js"]
+        }
+    ]
+}
