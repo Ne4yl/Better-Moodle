@@ -12,6 +12,7 @@ Upgrade for ESIEA ENT
 
 ## Features 
 - Login page
+    - Type ("better" on login page for cool thing !)
 - Pin courses 
 - Timer for quiz
     - In quizz
