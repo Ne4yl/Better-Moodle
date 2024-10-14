@@ -1,6 +1,31 @@
 # Better-Moodle
 Upgrade for ESIEA ENT
 
+## Features 
+- Login page
+- Pin courses 
+- Timer for quiz
+    - In quizz
+    - Better "relecture"
+        - Delete "Commencé le"
+        - Delete "Etat"
+        - Delete "Terminé le"
+        - Add "Temps éstimé" 
+        - Upgrade "Temps mis"
+        - Delete "Points"
+- Export dcode
+    - Pivot de gauss
+        - 1 matrice
+        - Relation lineaire
+    - Inverse
+    - Determinant
+        - Simple 
+        - Polynôme caractéristique 
+
+## Ideas
+- Dark mode
+- Next courses
+
 ## Explication des URL : 
 - Origin = "https://learning.esiea.fr/"
 

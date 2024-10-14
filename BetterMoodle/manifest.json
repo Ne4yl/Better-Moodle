@@ -9,7 +9,7 @@
     ],
     "content_scripts": [
         {
-            "run_at": "document_end",
+            "run_at": "document_idle",
             "matches": ["https://learning.esiea.fr/*"],
             "js": ["content.js"]
         }
