@@ -1,6 +1,15 @@
 # Better-Moodle
 Upgrade for ESIEA ENT
 
+## Installation ([Tuto](https://bashvlas.com/blog/install-chrome-extension-in-developer-mode))
+- Download .zip
+- Unzip the folder
+- Go to : chrome://extensions
+- Enable developer mode
+- Click on : Load unpacked
+- Select "BetterMoodle" folder
+- Finish ! 
+
 ## Features 
 - Login page
 - Pin courses 
