@@ -1,8 +1,12 @@
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function ChangePinState(name, url) {
 	// Stocker les pins
+	// console.log("Name : " + name + "\nUrl : " + url);
 	const pins = localStorage.getItem("pins") ? localStorage.getItem("pins").split(",") : [];
 	const board = document.getElementsByClassName("card-deck dashboard-card-deck ")[0];
-	// const cardMenu = board.querySelectorAll(".dropdown-menu.dropdown-menu-right");
 	const navBar = document.getElementsByClassName("nav-item ")[0];
 
 	board.childNodes.forEach(function (elem) {
@@ -27,7 +31,6 @@ function ChangePinState(name, url) {
 				} else if (indexPinned > -1) {
 					// Pour le bouton
 					pinCourse.innerText = "Epingler le cours";
-					pinCourse.setAttribute("onclick", `ChangePinState('${name}', '${url}')`);
 
 					// Pour remove le pin
 					navBar.childNodes.forEach(function (elem) {
@@ -69,12 +72,12 @@ function waitForElm(selector) {
 
 function waitForAllElm(selector) {
 	return new Promise((resolve) => {
-		if (document.querySelectorAll(selector)) {
+		if (document.querySelector(selector)) {
 			return resolve(document.querySelectorAll(selector));
 		}
 
 		const observer = new MutationObserver((mutations) => {
-			if (document.querySelectorAll(selector)) {
+			if (document.querySelector(selector)) {
 				observer.disconnect();
 				resolve(document.querySelectorAll(selector));
 			}
@@ -311,20 +314,23 @@ async function BetterMoodle() {
 		if (pathName == "/my/") {
 			// Pour creer les pins (car les board ne sont pas encore creer)
 			Pin();
+
+			sleep(1000).then(() => {
+				// Pour update les pin
+				const pinButon = document.querySelectorAll(".dropdown-item.pin");
+				console.log("Pin button", pinButon.length);
+				for (let i = 0; i < pinButon.length; i++) {
+					pinButon[i].addEventListener("click", function (elem) {
+						const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
+						const name = elem.target.name;
+						console.log("Name : " + elem.target.name + "\nUrl : " + url);
+						ChangePinState(name, url);
+					});
+				}
+			});
 		} else {
 			// Pour creer les pin dans la nav bar
 			PinCourse();
-		}
-
-		// Pour update les pin
-		const pinButon = document.getElementsByClassName("dropdown-item pin");
-		for (let i = 0; i < pinButon.length; i++) {
-			pinButon[i].addEventListener("click", function (elem) {
-				const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
-				const name = elem.target.name;
-				// console.log("Name : " + elem.target.name + "\nUrl : " + url);
-				ChangePinState(name, url);
-			});
 		}
 	}
 	// ##########################################################################################
@@ -378,6 +384,141 @@ async function BetterMoodle() {
 			window.addEventListener("beforeunload", function () {
 				localStorage.setItem(`${attempt}_${pageId}`, parseInt(chrono));
 			});
+
+			// Pour export dcode
+			var div_info = document.querySelector(".info");
+			var d = document.createElement("div");
+			d.id = "dcode_div";
+			d.innerText = "Export dcode";
+			d.role = "button";
+			div_info.appendChild(d);
+
+			document.getElementById("dcode_div").addEventListener("click", function () {
+				// -------------------------------------------- Moodle --------------------------------------------
+
+				var mat = [];
+				var tab = [];
+				var line, column;
+
+				const qtext = document.getElementsByClassName("qtext")[0];
+
+				if (qtext.innerText.includes("relation de dépendance linéaire") || qtext.innerText.includes("polynôme caractéristique")) {
+					// Tous les coefs (pas le bonne ordre)
+					document.querySelectorAll("span[id^='MathJax-Element']").forEach(function (elem) {
+						if (elem.dataset.mathml.includes("<mrow>") && tab.length == 0) {
+							tab = elem.dataset.mathml;
+						}
+					});
+
+					if (qtext.innerText.includes("polynôme caractéristique")) {
+						column = tab.toString().split("<mtr>").length - 1;
+						line = column;
+					}
+
+					tab = tab
+						.replaceAll("<mo>", "")
+						.replaceAll("</mo>", "")
+						.replaceAll("<msub>", "")
+						.replaceAll("</msub>", "")
+						.replaceAll("<mrow>", "")
+						.replaceAll("</mrow>", "")
+						.replaceAll("<mi>", "")
+						.replaceAll("</mi>", "")
+						.replaceAll("<mn>", "")
+						.replaceAll("</mn>", ",")
+						.replaceAll("<mtr>", "")
+						.replaceAll("</mtr>", "")
+						.replaceAll("<mtd>", "")
+						.replaceAll("</mtd>", "")
+						.replaceAll("<mfenced>", "")
+						.replaceAll("</mfenced>", "")
+						.split("<mtable>");
+					tab.shift();
+
+					for (let i = 0; i < tab.length; i++) {
+						tab[i] = tab[i].split("<", 1)[0].split(",");
+						tab[i].pop();
+					}
+
+					column = column == undefined ? tab.length : column;
+					line = line == undefined ? tab[0].length : line;
+
+					var total = 0;
+					for (let i = 0; i < line; i++) {
+						mat[i] = [];
+					}
+
+					for (let col = 0; col < column; col++) {
+						for (let li = 0; li < line; li++, total++) {
+							mat[li][col] = qtext.innerText.includes("polynôme caractéristique") ? tab[0][total] : tab[col][li];
+						}
+					}
+
+					if (qtext.innerText.includes("polynôme caractéristique")) {
+						for (let li = 0; li < line; li++) {
+							for (let col = 0; col < column; col++) {
+								if (col == li) {
+									mat[li][col] = mat[li][col] + "-x";
+								}
+							}
+						}
+					}
+
+					mat.unshift(line, column);
+					// console.log(mat);
+				} else {
+					// Permet de recuperer la matrice avec un format convenable
+					tab = document
+						.querySelector(".Wirisformula")
+						.alt.replaceAll(" cell", "")
+						.replaceAll(" end", "")
+						.replaceAll("negative ", "-")
+						.replaceAll("open parentheses table", "")
+						.replaceAll("table close parentheses", "")
+						.split("row");
+					tab.shift();
+
+					mat = [];
+
+					line = tab.length;
+					column = tab[0].split(" ").length - 2;
+					for (let i = 0; i < line; i++) {
+						tab[i] = tab[i].split(" ");
+						tab[i].shift();
+						tab[i].pop();
+					}
+
+					for (let li = 0; li < line; li++) {
+						mat[li] = [];
+						for (let col = 0; col < column; col++) {
+							mat[li][col] = parseInt(tab[li][col]);
+						}
+					}
+
+					// Parfois l'HTML n'est pas le même
+					/* if (qtext.innerText.includes("polynôme caractéristique")) {
+					for (let li = 0; li < line; li++) {
+						for (let col = 0; col < column; col++) {
+							if (col == li) {
+								mat[li][col] = mat[li][col] + "-x";
+							}
+						}
+					}
+				} */
+
+					mat.unshift(line, column);
+					console.log(mat);
+				}
+
+				// ---------------------- Send data ----------------------
+				if (qtext.innerText.includes("inverse")) {
+					window.open("https://www.dcode.fr/inverse-matrice?" + mat, "_blank").focus();
+				} else if (qtext.innerText.includes("déterminant") || qtext.innerText.includes("polynôme caractéristique")) {
+					window.open("https://www.dcode.fr/determinant-matrice?" + mat, "_blank").focus();
+				} else {
+					window.open("https://www.dcode.fr/matrice-echelonnee?" + mat, "_blank").focus();
+				}
+			});
 		}
 
 		if (pathName.includes("/review.php")) {
@@ -405,14 +546,14 @@ async function BetterMoodle() {
 				chronoTotal += chrono != null ? parseInt(chrono) : 0;
 
 				var tempsIndicatif = document
-				.getElementsByClassName("qtext")[idx]
-				.innerText.split("Temps indicatif :")[1]
-				.split("\n")[0]
-				.replaceAll(" ", "")
-				.split("min");
+					.getElementsByClassName("qtext")
+					[idx].innerText.split("Temps indicatif :")[1]
+					.split("\n")[0]
+					.replaceAll(" ", "")
+					.split("min");
 
 				chronoTotalEstimate +=
-				tempsIndicatif[1].length != 0 ? 60 * parseInt(tempsIndicatif[0]) + parseInt(tempsIndicatif[1]) : 60 * parseInt(tempsIndicatif[0]);
+					tempsIndicatif[1].length != 0 ? 60 * parseInt(tempsIndicatif[0]) + parseInt(tempsIndicatif[1]) : 60 * parseInt(tempsIndicatif[0]);
 			});
 
 			// Pour ajouter le temps total et le temps estimé au tableau
@@ -425,158 +566,22 @@ async function BetterMoodle() {
 
 			const chronoTotalEstimateTD = document.createElement("td");
 			chronoTotalEstimateTD.className = "cell";
-			chronoTotalEstimateTD.innerText = parseInt(chronoTotalEstimate / 60) + " min " + chronoTotalEstimate % 60 + " sec";
+			chronoTotalEstimateTD.innerText = parseInt(chronoTotalEstimate / 60) + " min " + (chronoTotalEstimate % 60) + " sec";
 
 			chronoTotalEstimateText.appendChild(chronoTotalEstimateTH);
 			chronoTotalEstimateText.appendChild(chronoTotalEstimateTD);
 
 			const tableau = document.getElementsByClassName("generaltable generalbox quizreviewsummary")[0].childNodes[0];
 			tableau.insertBefore(chronoTotalEstimateText, tableau.childNodes[3]);
-			tableau.childNodes[4].childNodes[1].innerText = parseInt(chronoTotal / 60) + " min " + chronoTotal % 60 + " sec (" + parseInt((chronoTotal / chronoTotalEstimate) * 100) + "%)";
+			tableau.childNodes[4].childNodes[1].innerText =
+				parseInt(chronoTotal / 60) + " min " + (chronoTotal % 60) + " sec (" + parseInt((chronoTotal / chronoTotalEstimate) * 100) + "%)";
 
-			// Pour clear le tableau 
-			tableau.removeChild(tableau.childNodes[0]); // Commencé le 
-			tableau.removeChild(tableau.childNodes[0]); // Etat 
+			// Pour clear le tableau
+			tableau.removeChild(tableau.childNodes[0]); // Commencé le
+			tableau.removeChild(tableau.childNodes[0]); // Etat
 			tableau.removeChild(tableau.childNodes[0]); // Terminé le
 			tableau.removeChild(tableau.childNodes[2]); // Points
 		}
-
-		// ##########################################################################################
-		// Pour export dcode
-		var div_info = document.querySelector(".info");
-		var d = document.createElement("div");
-		d.id = "dcode_div";
-		d.innerText = "Export dcode";
-		d.role = "button";
-		div_info.appendChild(d);
-
-		document.getElementById("dcode_div").addEventListener("click", function () {
-			// -------------------------------------------- Moodle --------------------------------------------
-
-			var mat = [];
-			var tab = [];
-			var line, column;
-
-			const qtext = document.getElementsByClassName("qtext")[0];
-
-			if (qtext.innerText.includes("relation de dépendance linéaire") || qtext.innerText.includes("polynôme caractéristique")) {
-				// Tous les coefs (pas le bonne ordre)
-				document.querySelectorAll("span[id^='MathJax-Element']").forEach(function (elem) {
-					if (elem.dataset.mathml.includes("<mrow>") && tab.length == 0) {
-						tab = elem.dataset.mathml;
-					}
-				});
-
-				if (qtext.innerText.includes("polynôme caractéristique")) {
-					column = tab.toString().split("<mtr>").length - 1;
-					line = column;
-				}
-
-				tab = tab
-					.replaceAll("<mo>", "")
-					.replaceAll("</mo>", "")
-					.replaceAll("<msub>", "")
-					.replaceAll("</msub>", "")
-					.replaceAll("<mrow>", "")
-					.replaceAll("</mrow>", "")
-					.replaceAll("<mi>", "")
-					.replaceAll("</mi>", "")
-					.replaceAll("<mn>", "")
-					.replaceAll("</mn>", ",")
-					.replaceAll("<mtr>", "")
-					.replaceAll("</mtr>", "")
-					.replaceAll("<mtd>", "")
-					.replaceAll("</mtd>", "")
-					.replaceAll("<mfenced>", "")
-					.replaceAll("</mfenced>", "")
-					.split("<mtable>");
-				tab.shift();
-
-				for (let i = 0; i < tab.length; i++) {
-					tab[i] = tab[i].split("<", 1)[0].split(",");
-					tab[i].pop();
-				}
-
-				column = column == undefined ? tab.length : column;
-				line = line == undefined ? tab[0].length : line;
-
-				var total = 0;
-				for (let i = 0; i < line; i++) {
-					mat[i] = [];
-				}
-
-				for (let col = 0; col < column; col++) {
-					for (let li = 0; li < line; li++, total++) {
-						mat[li][col] = qtext.innerText.includes("polynôme caractéristique") ? tab[0][total] : tab[col][li];
-					}
-				}
-
-				if (qtext.innerText.includes("polynôme caractéristique")) {
-					for (let li = 0; li < line; li++) {
-						for (let col = 0; col < column; col++) {
-							if (col == li) {
-								mat[li][col] = mat[li][col] + "-x";
-							}
-						}
-					}
-				}
-
-				mat.unshift(line, column);
-				// console.log(mat);
-			} 
-			else {
-				// Permet de recuperer la matrice avec un format convenable
-				tab = document
-					.querySelector(".Wirisformula")
-					.alt.replaceAll(" cell", "")
-					.replaceAll(" end", "")
-					.replaceAll("negative ", "-")
-					.replaceAll("open parentheses table", "")
-					.replaceAll("table close parentheses", "")
-					.split("row");
-				tab.shift();
-
-				mat = [];
-
-				line = tab.length;
-				column = tab[0].split(" ").length - 2;
-				for (let i = 0; i < line; i++) {
-					tab[i] = tab[i].split(" ");
-					tab[i].shift();
-					tab[i].pop();
-				}
-
-				for (let li = 0; li < line; li++) {
-					mat[li] = [];
-					for (let col = 0; col < column; col++) {
-						mat[li][col] = parseInt(tab[li][col]);
-					}
-				}
-
-				// Parfois l'HTML n'est pas le même
-				/* if (qtext.innerText.includes("polynôme caractéristique")) {
-					for (let li = 0; li < line; li++) {
-						for (let col = 0; col < column; col++) {
-							if (col == li) {
-								mat[li][col] = mat[li][col] + "-x";
-							}
-						}
-					}
-				} */
-
-				mat.unshift(line, column);
-				console.log(mat);
-			}
-
-			// ---------------------- Send data ----------------------
-			if (qtext.innerText.includes("inverse")) {
-				window.open("https://www.dcode.fr/inverse-matrice?" + mat, "_blank").focus();
-			} else if (qtext.innerText.includes("déterminant") || qtext.innerText.includes("polynôme caractéristique")) {
-				window.open("https://www.dcode.fr/determinant-matrice?" + mat, "_blank").focus();
-			} else {
-				window.open("https://www.dcode.fr/matrice-echelonnee?" + mat, "_blank").focus();
-			}
-		});
 	}
 }
 
