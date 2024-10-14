@@ -2,7 +2,7 @@
 Upgrade for ESIEA ENT
 
 ## Installation ([Tuto](https://bashvlas.com/blog/install-chrome-extension-in-developer-mode))
-- Download .zip
+- Download .zip [here](https://github.com/Ne4yl/Better-Moodle/archive/refs/heads/main.zip)
 - Unzip the folder
 - Go to : chrome://extensions
 - Enable developer mode
