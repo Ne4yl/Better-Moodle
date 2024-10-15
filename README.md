@@ -33,6 +33,7 @@ Upgrade for ESIEA ENT
         - Characteristic polynomial
 
 ## Ideas
+- Display quizz time result in course root
 - Dark mode
 - Next courses
 - Sort by favorites
