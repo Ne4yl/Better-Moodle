@@ -48,14 +48,7 @@ Upgrade for ESIEA ENT
 - Sort by favorites
 
 ## Contact
-<<<<<<< HEAD
 - Discord: neayl 
 
 ## Pirvacy 
 Currently, no user data is collected by the extension. However, if the extension proves valuable and is well-received, future improvements I have in mind may require collecting specific user data. This could include metrics like the time users take to complete exercises or preferences for displaying certain features (such as color schemes, background images, etc.). The aim would be to further enhance the overall user experience.
-=======
-- Discord: neayl
-
-## Privacy
-Currently, no user data is collected by the extension. However, if the extension proves valuable and is well-received, future improvements I have in mind may require collecting specific user data. This could include metrics like the time users take to complete exercises or preferences for displaying certain features (such as color schemes, background images, etc.). The aim would be to further enhance the overall user experience.
->>>>>>> 49e58496a3e93e9b298f78a3dc3e9c162cc1783e
