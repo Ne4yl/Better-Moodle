@@ -2,12 +2,21 @@
 Upgrade for ESIEA ENT
 
 ## Installation ([Tuto](https://bashvlas.com/blog/install-chrome-extension-in-developer-mode))
+### Chrome
 - Download the .zip [here](https://github.com/Ne4yl/Better-Moodle/archive/refs/heads/main.zip)
 - Unzip the folder
 - Go to: `chrome://extensions`
 - Enable developer mode
 - Click on: "Load unpacked"
 - Select the "BetterMoodle" folder
+- Done!
+
+### Firefox
+- Download the .zip [here](https://github.com/Ne4yl/Better-Moodle/archive/refs/heads/main.zip)
+- Unzip the folder
+- Go to: `about:debugging#/runtime/this-firefox`
+- Click on "load temporary Add-on..."
+- Select `manifest.json` in the BetterMoodle folder
 - Done!
 
 ## Features 
