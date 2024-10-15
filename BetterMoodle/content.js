@@ -117,11 +117,10 @@ async function Pin() {
 			// Pour les pin dans la nav bar
 			const pinnedTab = document.createElement("a");
 			pinnedTab.innerText = name;
-			pinnedTab.className = "nav-link  active ";
+			pinnedTab.className = "nav-link ";
 			pinnedTab.href = url;
 			pinnedTab.style.display = "none";
 			pinnedTab.style.position = "relative";
-			pinnedTab.style.borderBottomColor = "white";
 			pinnedTab.style.marginLeft = `.50rem`;
 
 			// Si le cour est deja pin
@@ -150,7 +149,7 @@ function PinCourse() {
 		// Nombre de cour pin (pour la position left)
 		const pinnedTab = document.createElement("a");
 		pinnedTab.innerText = name;
-		pinnedTab.className = "nav-link ";
+		pinnedTab.className = url == location.href ? "nav-link active" : "nav-link ";
 		pinnedTab.href = url;
 		pinnedTab.style.display = "flex";
 		pinnedTab.style.position = "relative";

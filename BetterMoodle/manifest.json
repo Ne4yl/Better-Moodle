@@ -2,10 +2,9 @@
     "manifest_version": 3,
     "name": "Better Moodle",
     "version": "1.0",
-    "description": "A better Moodle experience",
+    "description": "Better-Moodle is a Chrome extension designed to enhance the ESIEA ENT platform.",
     "permissions": [
-        "scripting",
-        "activeTab"
+        "scripting"
     ],
     "content_scripts": [
         {
