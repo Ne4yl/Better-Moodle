@@ -1,8 +1,8 @@
 # Better-Moodle
 Upgrade for ESIEA ENT
 
-## Installation ([Tuto](https://bashvlas.com/blog/install-chrome-extension-in-developer-mode))
-### Chrome
+## Installation
+### Chrome ([Tuto](https://bashvlas.com/blog/install-chrome-extension-in-developer-mode))
 - Download the .zip [here](https://github.com/Ne4yl/Better-Moodle/archive/refs/heads/main.zip)
 - Unzip the folder
 - Go to: `chrome://extensions`
@@ -11,7 +11,7 @@ Upgrade for ESIEA ENT
 - Select the "BetterMoodle" folder
 - Done!
 
-### Firefox
+### Firefox ([Tuto](https://youtu.be/XqWMDv411k0?si=wgiiYVw1CdBSfoQY&t=35))
 - Download the .zip [here](https://github.com/Ne4yl/Better-Moodle/archive/refs/heads/main.zip)
 - Unzip the folder
 - Go to: `about:debugging#/runtime/this-firefox`
