@@ -307,279 +307,297 @@ async function BetterMoodle() {
 	const navBar = document.getElementsByClassName("navbar fixed-top navbar-dark bg-primary navbar-expand ").length;
 
 	if (!!navBar) {
-		// Pour aligner les pinnedCourses
-		document.getElementsByClassName("nav-item ")[0].style.display = "flex";
+		// Pour la navbar
+		try {
+			// Pour aligner les pinnedCourses
+			document.getElementsByClassName("nav-item ")[0].style.display = "flex";
 
-		if (pathName == "/my/") {
-			// Pour creer les pins (car les board ne sont pas encore creer)
-			Pin();
+			if (pathName == "/my/") {
+				// Pour creer les pins (car les board ne sont pas encore creer)
+				Pin();
 
-			sleep(1000).then(() => {
-				// Pour update les pin
-				const pinButon = document.querySelectorAll(".dropdown-item.pin");
-				console.log("Pin button", pinButon.length);
-				for (let i = 0; i < pinButon.length; i++) {
-					pinButon[i].addEventListener("click", function (elem) {
-						const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
-						const name = elem.target.name;
-						console.log("Name : " + elem.target.name + "\nUrl : " + url);
-						ChangePinState(name, url);
-					});
-				}
-			});
-		} else {
-			// Pour creer les pin dans la nav bar
-			PinCourse();
+				sleep(1000).then(() => {
+					// Pour update les pin
+					const pinButon = document.querySelectorAll(".dropdown-item.pin");
+					console.log("Pin button", pinButon.length);
+					for (let i = 0; i < pinButon.length; i++) {
+						pinButon[i].addEventListener("click", function (elem) {
+							const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
+							const name = elem.target.name;
+							console.log("Name : " + elem.target.name + "\nUrl : " + url);
+							ChangePinState(name, url);
+						});
+					}
+				});
+			} else {
+				// Pour creer les pin dans la nav bar
+				PinCourse();
+			}
+		} catch (e) {
+			console.log("Pas de pin", e);
 		}
 	}
 	// ##########################################################################################
 
 	// ##########################################################################################
-	// Pour le chrono
+	// Pour les quizz
 	if (pathName.includes("/quiz/") && window.location.search.includes("attempt=")) {
 		const attempt = window.location.search.split("attempt=")[1].split("&")[0];
 
 		if (pathName.includes("/attempt.php")) {
-			const qtext = await waitForElm(".qtext");
-			const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
+			// Pour le chrono
+			try {
+				const qtext = await waitForElm(".qtext");
+				const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
 
-			// Pour creer le "p"
-			var pChrono = document.createElement("p");
-			pChrono.id = "chrono";
-			qtext.insertBefore(pChrono, qtext.firstChild);
-			pChrono = document.getElementById("chrono");
-
-			const text = document.createElement("strong");
-			text.innerHTML = "Temps écoulé : ";
-			pChrono.insertBefore(text, pChrono.firstChild);
-
-			var textChrono = document.createElement("text");
-			textChrono.innertHTML = "0";
-			textChrono.id = "textChrono";
-			pChrono.appendChild(textChrono);
-
-			textChrono = document.getElementById("textChrono");
-			var chrono = localStorage.getItem(`${attempt}_${pageId}`) != null ? localStorage.getItem(`${attempt}_${pageId}`) : 0;
-			textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
-
-			const tempsIndicatif = document
-				.getElementsByClassName("qtext")[0]
-				.innerText.split("Temps indicatif :")[1]
-				.split("\n")[0]
-				.replaceAll(" ", "")
-				.split("min");
-			const tempsSeconde =
-				tempsIndicatif[1].length != 0 ? 60 * parseInt(tempsIndicatif[0]) + parseInt(tempsIndicatif[1]) : 60 * parseInt(tempsIndicatif[0]);
-
-			const verifyButton = !!document.querySelector("button[class='submit btn btn-secondary']");
-			if (verifyButton) {
-				setInterval(function () {
-					chrono++;
-					textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
-					if (chrono > tempsSeconde) textChrono.style.color = "red";
-				}, 1000);
-			}
-
-			window.addEventListener("beforeunload", function () {
-				localStorage.setItem(`${attempt}_${pageId}`, parseInt(chrono));
-			});
-
-			// Pour export dcode
-			var div_info = document.querySelector(".info");
-			var d = document.createElement("div");
-			d.id = "dcode_div";
-			d.innerText = "Export dcode";
-			d.role = "button";
-			div_info.appendChild(d);
-
-			document.getElementById("dcode_div").addEventListener("click", function () {
-				// -------------------------------------------- Moodle --------------------------------------------
-
-				var mat = [];
-				var tab = [];
-				var line, column;
-
-				const qtext = document.getElementsByClassName("qtext")[0];
-
-				if (qtext.innerText.includes("relation de dépendance linéaire") || qtext.innerText.includes("polynôme caractéristique")) {
-					// Tous les coefs (pas le bonne ordre)
-					document.querySelectorAll("span[id^='MathJax-Element']").forEach(function (elem) {
-						if (elem.dataset.mathml.includes("<mrow>") && tab.length == 0) {
-							tab = elem.dataset.mathml;
-						}
-					});
-
-					if (qtext.innerText.includes("polynôme caractéristique")) {
-						column = tab.toString().split("<mtr>").length - 1;
-						line = column;
-					}
-
-					tab = tab
-						.replaceAll("<mo>", "")
-						.replaceAll("</mo>", "")
-						.replaceAll("<msub>", "")
-						.replaceAll("</msub>", "")
-						.replaceAll("<mrow>", "")
-						.replaceAll("</mrow>", "")
-						.replaceAll("<mi>", "")
-						.replaceAll("</mi>", "")
-						.replaceAll("<mn>", "")
-						.replaceAll("</mn>", ",")
-						.replaceAll("<mtr>", "")
-						.replaceAll("</mtr>", "")
-						.replaceAll("<mtd>", "")
-						.replaceAll("</mtd>", "")
-						.replaceAll("<mfenced>", "")
-						.replaceAll("</mfenced>", "")
-						.split("<mtable>");
-					tab.shift();
-
-					for (let i = 0; i < tab.length; i++) {
-						tab[i] = tab[i].split("<", 1)[0].split(",");
-						tab[i].pop();
-					}
-
-					column = column == undefined ? tab.length : column;
-					line = line == undefined ? tab[0].length : line;
-
-					var total = 0;
-					for (let i = 0; i < line; i++) {
-						mat[i] = [];
-					}
-
-					for (let col = 0; col < column; col++) {
-						for (let li = 0; li < line; li++, total++) {
-							mat[li][col] = qtext.innerText.includes("polynôme caractéristique") ? tab[0][total] : tab[col][li];
-						}
-					}
-
-					if (qtext.innerText.includes("polynôme caractéristique")) {
-						for (let li = 0; li < line; li++) {
-							for (let col = 0; col < column; col++) {
-								if (col == li) {
-									mat[li][col] = mat[li][col] + "-x";
-								}
-							}
-						}
-					}
-
-					mat.unshift(line, column);
-					// console.log(mat);
-				} else {
-					// Permet de recuperer la matrice avec un format convenable
-					tab = document
-						.querySelector(".Wirisformula")
-						.alt.replaceAll(" cell", "")
-						.replaceAll(" end", "")
-						.replaceAll("negative ", "-")
-						.replaceAll("open parentheses table", "")
-						.replaceAll("table close parentheses", "")
-						.split("row");
-					tab.shift();
-
-					mat = [];
-
-					line = tab.length;
-					column = tab[0].split(" ").length - 2;
-					for (let i = 0; i < line; i++) {
-						tab[i] = tab[i].split(" ");
-						tab[i].shift();
-						tab[i].pop();
-					}
-
-					for (let li = 0; li < line; li++) {
-						mat[li] = [];
-						for (let col = 0; col < column; col++) {
-							mat[li][col] = parseInt(tab[li][col]);
-						}
-					}
-
-					// Parfois l'HTML n'est pas le même
-					/* if (qtext.innerText.includes("polynôme caractéristique")) {
-					for (let li = 0; li < line; li++) {
-						for (let col = 0; col < column; col++) {
-							if (col == li) {
-								mat[li][col] = mat[li][col] + "-x";
-							}
-						}
-					}
-				} */
-
-					mat.unshift(line, column);
-					console.log(mat);
-				}
-
-				// ---------------------- Send data ----------------------
-				if (qtext.innerText.includes("inverse")) {
-					window.open("https://www.dcode.fr/inverse-matrice?" + mat, "_blank").focus();
-				} else if (qtext.innerText.includes("déterminant") || qtext.innerText.includes("polynôme caractéristique")) {
-					window.open("https://www.dcode.fr/determinant-matrice?" + mat, "_blank").focus();
-				} else {
-					window.open("https://www.dcode.fr/matrice-echelonnee?" + mat, "_blank").focus();
-				}
-			});
-		}
-
-		if (pathName.includes("/review.php")) {
-			const qtext = await waitForAllElm(".qtext");
-			var chronoTotal = 0;
-			var chronoTotalEstimate = 0;
-
-			qtext.forEach(function (elem, idx) {
+				// Pour creer le "p"
 				var pChrono = document.createElement("p");
-				pChrono.id = `displayTime_${idx}`;
-				// console.log(qtext[idx].childNodes[0].firstChild);
-				qtext[idx].childNodes[0].insertBefore(pChrono, qtext[idx].childNodes[0].firstChild);
-				pChrono = document.getElementById(`displayTime_${idx}`);
+				pChrono.id = "chrono";
+				qtext.insertBefore(pChrono, qtext.firstChild);
+				pChrono = document.getElementById("chrono");
 
 				const text = document.createElement("strong");
-				text.innerHTML = "Temps mis : ";
-				text.id = `textChrono_${idx}`;
+				text.innerHTML = "Temps écoulé : ";
 				pChrono.insertBefore(text, pChrono.firstChild);
 
-				const chrono = localStorage.getItem(`${attempt}_${idx}`);
 				var textChrono = document.createElement("text");
-				textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
+				textChrono.innertHTML = "0";
+				textChrono.id = "textChrono";
 				pChrono.appendChild(textChrono);
 
-				chronoTotal += chrono != null ? parseInt(chrono) : 0;
+				textChrono = document.getElementById("textChrono");
+				var chrono = localStorage.getItem(`${attempt}_${pageId}`) != null ? localStorage.getItem(`${attempt}_${pageId}`) : 0;
+				textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
 
-				var tempsIndicatif = document
-					.getElementsByClassName("qtext")
-					[idx].innerText.split("Temps indicatif :")[1]
+				const tempsIndicatif = document
+					.getElementsByClassName("qtext")[0]
+					.innerText.split("Temps indicatif :")[1]
 					.split("\n")[0]
 					.replaceAll(" ", "")
 					.split("min");
-
-				chronoTotalEstimate +=
+				const tempsSeconde =
 					tempsIndicatif[1].length != 0 ? 60 * parseInt(tempsIndicatif[0]) + parseInt(tempsIndicatif[1]) : 60 * parseInt(tempsIndicatif[0]);
-			});
 
-			// Pour ajouter le temps total et le temps estimé au tableau
-			const chronoTotalEstimateText = document.createElement("tr");
+				const verifyButton = !!document.querySelector("button[class='submit btn btn-secondary']");
+				if (verifyButton) {
+					setInterval(function () {
+						chrono++;
+						textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
+						if (chrono > tempsSeconde) textChrono.style.color = "red";
+					}, 1000);
+				}
 
-			const chronoTotalEstimateTH = document.createElement("th");
-			chronoTotalEstimateTH.innerText = "Temps éstimé";
-			chronoTotalEstimateTH.className = "cell";
-			chronoTotalEstimateTH.scope = "row";
+				window.addEventListener("beforeunload", function () {
+					localStorage.setItem(`${attempt}_${pageId}`, parseInt(chrono));
+				});
+			} catch (e) {
+				console.log("Pas de temps", e);
+			}
 
-			const chronoTotalEstimateTD = document.createElement("td");
-			chronoTotalEstimateTD.className = "cell";
-			chronoTotalEstimateTD.innerText = parseInt(chronoTotalEstimate / 60) + " min " + (chronoTotalEstimate % 60) + " sec";
+			// Pour export dcode
+			try {
+				var div_info = document.querySelector(".info");
+				var d = document.createElement("div");
+				d.id = "dcode_div";
+				d.innerText = "Export dcode";
+				d.role = "button";
+				div_info.appendChild(d);
 
-			chronoTotalEstimateText.appendChild(chronoTotalEstimateTH);
-			chronoTotalEstimateText.appendChild(chronoTotalEstimateTD);
+				document.getElementById("dcode_div").addEventListener("click", function () {
+					// -------------------------------------------- Moodle --------------------------------------------
 
-			const tableau = document.getElementsByClassName("generaltable generalbox quizreviewsummary")[0].childNodes[0];
-			tableau.insertBefore(chronoTotalEstimateText, tableau.childNodes[3]);
-			tableau.childNodes[4].childNodes[1].innerText =
-				parseInt(chronoTotal / 60) + " min " + (chronoTotal % 60) + " sec (" + parseInt((chronoTotal / chronoTotalEstimate) * 100) + "%)";
+					var mat = [];
+					var tab = [];
+					var line, column;
 
-			// Pour clear le tableau
-			tableau.removeChild(tableau.childNodes[0]); // Commencé le
-			tableau.removeChild(tableau.childNodes[0]); // Etat
-			tableau.removeChild(tableau.childNodes[0]); // Terminé le
-			tableau.removeChild(tableau.childNodes[2]); // Points
+					const qtext = document.getElementsByClassName("qtext")[0];
+
+					if (qtext.innerText.includes("relation de dépendance linéaire") || qtext.innerText.includes("polynôme caractéristique")) {
+						// Tous les coefs (pas le bonne ordre)
+						document.querySelectorAll("span[id^='MathJax-Element']").forEach(function (elem) {
+							if (elem.dataset.mathml.includes("<mrow>") && tab.length == 0) {
+								tab = elem.dataset.mathml;
+							}
+						});
+
+						if (qtext.innerText.includes("polynôme caractéristique")) {
+							column = tab.toString().split("<mtr>").length - 1;
+							line = column;
+						}
+
+						tab = tab
+							.replaceAll("<mo>", "")
+							.replaceAll("</mo>", "")
+							.replaceAll("<msub>", "")
+							.replaceAll("</msub>", "")
+							.replaceAll("<mrow>", "")
+							.replaceAll("</mrow>", "")
+							.replaceAll("<mi>", "")
+							.replaceAll("</mi>", "")
+							.replaceAll("<mn>", "")
+							.replaceAll("</mn>", ",")
+							.replaceAll("<mtr>", "")
+							.replaceAll("</mtr>", "")
+							.replaceAll("<mtd>", "")
+							.replaceAll("</mtd>", "")
+							.replaceAll("<mfenced>", "")
+							.replaceAll("</mfenced>", "")
+							.split("<mtable>");
+						tab.shift();
+
+						for (let i = 0; i < tab.length; i++) {
+							tab[i] = tab[i].split("<", 1)[0].split(",");
+							tab[i].pop();
+						}
+
+						column = column == undefined ? tab.length : column;
+						line = line == undefined ? tab[0].length : line;
+
+						var total = 0;
+						for (let i = 0; i < line; i++) {
+							mat[i] = [];
+						}
+
+						for (let col = 0; col < column; col++) {
+							for (let li = 0; li < line; li++, total++) {
+								mat[li][col] = qtext.innerText.includes("polynôme caractéristique") ? tab[0][total] : tab[col][li];
+							}
+						}
+
+						if (qtext.innerText.includes("polynôme caractéristique")) {
+							for (let li = 0; li < line; li++) {
+								for (let col = 0; col < column; col++) {
+									if (col == li) {
+										mat[li][col] = mat[li][col] + "-x";
+									}
+								}
+							}
+						}
+
+						mat.unshift(line, column);
+						// console.log(mat);
+					} else {
+						// Permet de recuperer la matrice avec un format convenable
+						tab = document
+							.querySelector(".Wirisformula")
+							.alt.replaceAll(" cell", "")
+							.replaceAll(" end", "")
+							.replaceAll("negative ", "-")
+							.replaceAll("open parentheses table", "")
+							.replaceAll("table close parentheses", "")
+							.split("row");
+						tab.shift();
+
+						mat = [];
+
+						line = tab.length;
+						column = tab[0].split(" ").length - 2;
+						for (let i = 0; i < line; i++) {
+							tab[i] = tab[i].split(" ");
+							tab[i].shift();
+							tab[i].pop();
+						}
+
+						for (let li = 0; li < line; li++) {
+							mat[li] = [];
+							for (let col = 0; col < column; col++) {
+								mat[li][col] = parseInt(tab[li][col]);
+							}
+						}
+
+						// Parfois l'HTML n'est pas le même
+						/* if (qtext.innerText.includes("polynôme caractéristique")) {
+							for (let li = 0; li < line; li++) {
+								for (let col = 0; col < column; col++) {
+									if (col == li) {
+										mat[li][col] = mat[li][col] + "-x";
+									}
+								}
+							}
+						} */
+
+						mat.unshift(line, column);
+						console.log(mat);
+					}
+
+					// ---------------------- Send data ----------------------
+					if (qtext.innerText.includes("inverse")) {
+						window.open("https://www.dcode.fr/inverse-matrice?" + mat, "_blank").focus();
+					} else if (qtext.innerText.includes("déterminant") || qtext.innerText.includes("polynôme caractéristique")) {
+						window.open("https://www.dcode.fr/determinant-matrice?" + mat, "_blank").focus();
+					} else {
+						window.open("https://www.dcode.fr/matrice-echelonnee?" + mat, "_blank").focus();
+					}
+				});
+			} catch (e) {
+				console.log("Pas d'export dcode", e);
+			}
+		}
+
+		if (pathName.includes("/review.php")) {
+			try {
+				const qtext = await waitForAllElm(".qtext");
+				var chronoTotal = 0;
+				var chronoTotalEstimate = 0;
+
+				qtext.forEach(function (elem, idx) {
+					var pChrono = document.createElement("p");
+					pChrono.id = `displayTime_${idx}`;
+					// console.log(qtext[idx].childNodes[0].firstChild);
+					qtext[idx].childNodes[0].insertBefore(pChrono, qtext[idx].childNodes[0].firstChild);
+					pChrono = document.getElementById(`displayTime_${idx}`);
+
+					const text = document.createElement("strong");
+					text.innerHTML = "Temps mis : ";
+					text.id = `textChrono_${idx}`;
+					pChrono.insertBefore(text, pChrono.firstChild);
+
+					const chrono = localStorage.getItem(`${attempt}_${idx}`);
+					var textChrono = document.createElement("text");
+					textChrono.innerHTML = parseInt(chrono / 60) + " min " + (chrono % 60) + " sec";
+					pChrono.appendChild(textChrono);
+
+					chronoTotal += chrono != null ? parseInt(chrono) : 0;
+
+					var tempsIndicatif = document
+						.getElementsByClassName("qtext")
+						[idx].innerText.split("Temps indicatif :")[1]
+						.split("\n")[0]
+						.replaceAll(" ", "")
+						.split("min");
+
+					chronoTotalEstimate +=
+						tempsIndicatif[1].length != 0 ? 60 * parseInt(tempsIndicatif[0]) + parseInt(tempsIndicatif[1]) : 60 * parseInt(tempsIndicatif[0]);
+				});
+
+				// Pour ajouter le temps total et le temps estimé au tableau
+				const chronoTotalEstimateText = document.createElement("tr");
+
+				const chronoTotalEstimateTH = document.createElement("th");
+				chronoTotalEstimateTH.innerText = "Temps éstimé";
+				chronoTotalEstimateTH.className = "cell";
+				chronoTotalEstimateTH.scope = "row";
+
+				const chronoTotalEstimateTD = document.createElement("td");
+				chronoTotalEstimateTD.className = "cell";
+				chronoTotalEstimateTD.innerText = parseInt(chronoTotalEstimate / 60) + " min " + (chronoTotalEstimate % 60) + " sec";
+
+				chronoTotalEstimateText.appendChild(chronoTotalEstimateTH);
+				chronoTotalEstimateText.appendChild(chronoTotalEstimateTD);
+
+				const tableau = document.getElementsByClassName("generaltable generalbox quizreviewsummary")[0].childNodes[0];
+				tableau.insertBefore(chronoTotalEstimateText, tableau.childNodes[3]);
+				tableau.childNodes[4].childNodes[1].innerText =
+					parseInt(chronoTotal / 60) + " min " + (chronoTotal % 60) + " sec (" + parseInt((chronoTotal / chronoTotalEstimate) * 100) + "%)";
+
+				// Pour clear le tableau
+				tableau.removeChild(tableau.childNodes[0]); // Commencé le
+				tableau.removeChild(tableau.childNodes[0]); // Etat
+				tableau.removeChild(tableau.childNodes[0]); // Terminé le
+				tableau.removeChild(tableau.childNodes[2]); // Points
+			} catch (e) {
+				console.log("Pas de review", e);
+			}
 		}
 	}
 }
