@@ -3,9 +3,7 @@
     "name": "Better Moodle",
     "version": "1.0",
     "description": "Better-Moodle is a Chrome extension designed to enhance the ESIEA ENT platform.",
-    "permissions": [
-        "scripting"
-    ],
+    "permissions": [],
     "content_scripts": [
         {
             "run_at": "document_idle",
