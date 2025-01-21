@@ -534,7 +534,7 @@ async function BetterMoodle() {
 			}
 		}
 
-		if (pathName.includes("/review.php")) {
+		if (pathName.includes("/review.php") && !window.location.href.includes("&evaluate=")) {
 			try {
 				const qtext = await waitForAllElm(".qtext");
 				var chronoTotal = 0;
@@ -596,9 +596,188 @@ async function BetterMoodle() {
 				tableau.removeChild(tableau.childNodes[0]); // Terminé le
 				tableau.removeChild(tableau.childNodes[2]); // Points
 			} catch (e) {
-				console.log("Pas de review", e);
+				console.log("Pas de review\n", e);
 			}
 		}
+	}
+
+	// Pour les évaluations 
+	if (pathName.includes("/quiz/view") && document.body.className.includes("secure")) {
+		const table = document.getElementsByClassName("generaltable quizattemptsummary")[0];
+		table.childNodes[2].childNodes[1].insertCell(-1).outerHTML = "<th class='header c4 lastcol' style='text-align:center;' scope='col'>Refaire</th>";
+		const reviewUrl = table.childNodes[4].childNodes[0].childNodes[7].childNodes[0].href;
+		table.childNodes[4].childNodes[0].insertCell(-1).outerHTML = `<td class='cell c3 lastcol' style='text-align:center;'><a title='Relire vos réponses à cette tentative' href="${reviewUrl}&evaluate=200">Refaire</a></td>`;
+	}
+
+	if (pathName.includes("/quiz/") && window.location.href.includes("&evaluate=")) {
+		
+		// Pour enlever le tableau
+		const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
+		if (pageId == 0) {
+			const recap = await waitForElm(".generaltable.generalbox.quizreviewsummary");
+			recap.remove();
+		}
+
+		// ------- Pour les QCM -------
+		// Pour stocker les valeurs
+		const answer = [];
+
+		// Pour avoir les réponses 
+		document.querySelectorAll(".feedbacktrigger").forEach (function (elem) {
+			elem.parentNode.querySelectorAll(".form-control, .select.custom-select").forEach ( function (elem2) { // .form-control -> pour les question sur lesquels tu entres une valeur, .select -> pour les question ou tu choisis
+				
+				// Pour les question de type : form-control 
+				if (elem2.className.includes("form-control")) {
+					answer[elem2.id] = elem.dataset.content.split(": ")[1].split("<")[0];
+				}
+
+				// Pour les question de type : select
+				if (elem2.className.includes("select custom-select")) {
+					const correction = elem.dataset.content.split(": ")[1].split("<")[0];
+					
+					for (i = 0; i < elem2.options.length; i++) {
+						
+						if (elem2.options[i].text === correction) {
+							console.log("Question : ", elem2.id, "Rep : ", elem2.options[i].text, "Correction : ", correction, "Index : ", i);
+							answer[elem2.id] = i;
+						}
+					}
+				}
+			});
+		});
+
+		// Pour les checkmarks
+		document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
+			elem.remove();
+		});
+		
+		// Pour enlever couleurs sur les question (a droite)
+		document.querySelectorAll(".qnbutton").forEach( function(elem, idx) {
+			elem.className = "qnbutton null free btn";
+		});
+
+		// Pour faire en sorte qu'on puisse repondre
+		document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
+			elem.removeAttribute("disabled");
+			elem.removeAttribute("readonly");
+            elem.value = "";
+
+			if (elem.className.includes("select custom-select")) {
+				elem.setAttribute("selected", "0");
+				elem.addEventListener("change", function(elem2) {
+					elem2.target.setAttribute("selected", elem2.target.selectedIndex);
+				});
+			}
+		});
+
+		// Pour enlever les réponses
+		document.querySelectorAll("option[selected='selected']").forEach ( function (elem) {
+			elem.removeAttribute("selected");
+		});
+
+		// Pour enlever la notes sur la question (a gauche)
+		document.querySelectorAll("div[class='info']").forEach( function(elem) {
+			elem.childNodes[1].remove();
+			elem.childNodes[1].innerText = elem.childNodes[1].innerText.slice(-4) + " point(s)";
+		});
+
+		// Pour enlever les réponses (en bas)
+		document.querySelectorAll(".outcome.clearfix").forEach (function (elem) {
+			elem.remove();
+		});
+
+		// Pour les preuves
+		document.querySelectorAll(".answer.ordering").forEach (function (elem) {
+			elem.childNodes[0].childNodes.forEach (function (elem) {
+				elem.childNodes[0].remove();
+				elem.removeAttribute("class");   
+			});
+		});
+
+		// Desactiver l'affichage 1 réponse / page et changer le "Terminer" en "Valider"
+		document.querySelector(".othernav").childNodes[0].outerHTML = '<button class="finish" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px; margin-bottom: 10px;">Terminer</button><br>';
+		// inserer pour la fin de l'examen
+
+		document.querySelectorAll(".mod_quiz-next-nav").forEach ( function (elem) {
+			elem.outerHTML = '<button class="mod_quiz-next-nav" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px;">Vérifier</button>';
+		})
+
+		// Pour verifier les reponses
+		document.querySelectorAll(".mod_quiz-next-nav").forEach( function(elem2) {
+			elem2.addEventListener("click", function() {
+
+				// Pour remove les checkmarks
+				document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
+					elem.remove();
+				});
+
+				// Pour les question libre
+				document.querySelectorAll(".form-control").forEach ( function (elem) {
+					const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+					if (elem.value == answer[elem.id]) {
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+						elem.setAttribute("readonly", "true");
+					}
+					else {
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+					}
+				});
+
+				// Pour les question de selection
+				document.querySelectorAll(".select.custom-select").forEach ( function (elem) {
+					const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+					if (elem.selectedIndex == answer[elem.id]) {
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+						elem.setAttribute("disabled", "disabled");
+					}
+					else {
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+					}
+				});
+
+				// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
+			});
+		})
+
+		// Pour finir l'exam et afficher les résultats
+		document.querySelector(".finish").addEventListener("click", function() {
+			
+			// Pour remove les checkmarks
+			document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
+				elem.remove();
+			});
+
+			// Pour faire en sorte qu'on puisse plus repondre
+			document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
+				elem.setAttribute("disabled", "true");
+				elem.setAttribute("readonly", "true");
+			});
+
+			// Pour les question basiques 
+			document.querySelectorAll(".form-control").forEach ( function (elem) {
+				const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+				if (elem.value == answer[elem.id]) {
+					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+				}
+				else {
+					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${answer[elem.id]}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+				}
+			});
+
+			// Pour les question de selection
+			document.querySelectorAll(".select.custom-select").forEach ( function (elem) {
+				const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+				if (elem.selectedIndex == answer[elem.id]) {
+					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+				}
+				else {
+					const correct = elem.options[answer[elem.id]].text;
+					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${correct}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+				}
+			});
+
+			// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
+		});
 	}
 }
 
