@@ -159,6 +159,28 @@ function PinCourse() {
 	});
 }
 
+function invertColor(hex) {
+    if (hex.indexOf('#') === 0) {
+        hex = hex.slice(1);
+    }
+    
+    // convert 3-digit hex to 6-digits.
+    if (hex.length === 3) {
+        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    
+    if (hex.length !== 6) {
+        throw new Error('Invalid HEX color.');
+    }
+    
+    // invert color components
+    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+        g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
+        b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
+    
+    return '#' + r.padStart(2, '0') + g.padStart(2, '0') + b.padStart(2, '0');
+}
+
 async function BetterMoodle() {
 	// ##########################################################################################
 	// Pour la page de login (+ BetterMoodle)
@@ -314,6 +336,9 @@ async function BetterMoodle() {
 
 			if (pathName == "/my/") {
 				// Pour creer les pins (car les board ne sont pas encore creer)
+
+				// Pour le background 
+				document.getElementsByClassName("bg-primary")[0].style.cssText = "background-color: #243b5269 !important";
 				Pin();
 
 				sleep(1000).then(() => {
@@ -600,8 +625,10 @@ async function BetterMoodle() {
 			}
 		}
 	}
+	// ##########################################################################################
 
-	// Pour les évaluations 
+	// ##########################################################################################
+	// Pour refaire les évaluations 
 	if (pathName.includes("/quiz/view") && document.body.className.includes("secure")) {
 		const table = document.getElementsByClassName("generaltable quizattemptsummary")[0];
 		table.childNodes[2].childNodes[1].insertCell(-1).outerHTML = "<th class='header c4 lastcol' style='text-align:center;' scope='col'>Refaire</th>";
@@ -609,6 +636,8 @@ async function BetterMoodle() {
 		table.childNodes[4].childNodes[0].insertCell(-1).outerHTML = `<td class='cell c3 lastcol' style='text-align:center;'><a title='Relire vos réponses à cette tentative' href="${reviewUrl}&evaluate=200">Refaire</a></td>`;
 	}
 
+	// Dans "refaire" pour reset les evalations 
+	// Il faut faire le temps + les points 
 	if (pathName.includes("/quiz/") && window.location.href.includes("&evaluate=")) {
 		
 		// Pour enlever le tableau
@@ -778,6 +807,87 @@ async function BetterMoodle() {
 
 			// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
 		});
+	}
+	// ##########################################################################################
+
+	// ##########################################################################################
+	// Pour le theme
+	if (location.href == "https://learning.esiea.fr/my/") {
+		const theme = 'dark';
+		const themeColor = "#000000";
+		const themeColorInvert = invertColor(themeColor);
+		const transparent = "#ffffff00";
+
+		// Recuperer l'url 
+		backgroundUrl = localStorage.getItem("BackgroundURL");
+		
+		// Pour les cards + le container
+		const card = await waitForAllElm(".card");
+		card.forEach( function (elem) {
+			elem.style.backgroundColor = transparent;
+		});
+		
+		// Les cards
+		const dashboardCard = await waitForAllElm(".dashboard-card");
+		dashboardCard.forEach( function (elem) {
+			elem.style.backgroundColor = `${themeColor}a0`
+			elem.style.border = "1px solid rgb(255 255 255)"
+			// elem.style.border = "1.5px solid"
+			// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
+		});
+
+		// Enleve le bandeau en haut 
+		document.getElementById("inst1310").remove();
+		document.getElementsByClassName("mt-0")[0].remove();
+		
+		// Le bg de la page 
+		document.body.style.backgroundImage = backgroundUrl;
+		document.body.style.backgroundSize = "1920px 1080px";
+		document.body.style.color = themeColorInvert;
+		
+		// Derriere "Tableau de bord"
+		const container = document.getElementById("topofscroll");
+		container.style.backgroundColor = transparent;
+		container.style.color = themeColor;
+		
+		// Pour les textes et les icon
+		const text = await waitForAllElm(".progress-text, .main-inner, .categoryname, .icon, a");
+		text.forEach( function (elem) {
+			elem.style.color = themeColorInvert;
+		});
+		
+		// Les boutons 
+		document.querySelectorAll(".btn").forEach( function (elem) {
+			if (elem.className == "btn dropdown-toggle") return;
+			if (elem.className.includes("dropdown-toggle")) {
+				elem.style.backgroundColor = `${themeColor}69`
+				elem.style.color = themeColorInvert;
+				return;
+			}
+			elem.style.backgroundColor = `${invertColor(themeColor)}69`
+		});
+		
+		// Pour le bas des cards
+		const cardFooter = await waitForAllElm(".bg-white");
+		cardFooter.forEach( function (elem) {
+			elem.style.cssText = `background-color: ${transparent} !important`
+		});
+		
+		// Pour le menu de droite
+		const rightMenu = await waitForAllElm(".drawer");
+		rightMenu.forEach( function (elem) {
+			elem.style.backgroundColor = `${themeColor}69`;
+			
+			elem.querySelectorAll(".card.mb-3").forEach ( function (elem2) {
+				elem2.style.border = "1px solid";
+			});
+		});
+
+		// Pour le menu du profil 
+		const profileMenu = await waitForElm(".dropdown-menu-right");
+		// console.log(profileMenu);
+		profileMenu.style.backgroundColor = `${themeColor}a0`;
+		profileMenu.style.border = `1px solid ${themeColorInvert}`;
 	}
 }
 
