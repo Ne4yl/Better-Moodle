@@ -108,7 +108,6 @@ async function Pin() {
 			const storedName = name + "|" + url;
 
 			// Bouton pour pin
-			const navBar = document.getElementsByClassName("nav-item ")[0];
 			const pinCourse = document.createElement("button");
 			pinCourse.className = "dropdown-item pin";
 			pinCourse.innerText = "Epingler le cours";
@@ -181,10 +180,62 @@ function invertColor(hex) {
     return '#' + r.padStart(2, '0') + g.padStart(2, '0') + b.padStart(2, '0');
 }
 
+// Tri du tableau (pour les favoris) : 
+function compareFn(a, b) {
+	aFav = a.querySelector("span[data-region='is-favourite']");
+	bFav = b.querySelector("span[data-region='is-favourite']");
+
+	aBool = aFav.ariaHidden === 'false';
+	bBool = bFav.ariaHidden === 'false';
+	if (!aBool && bBool) {
+		return 1;
+	}
+	else if (!bBool && aBool) {
+		return -1;
+	}
+	else if (aBool == bBool) {
+		aName = a.querySelector(".multiline").title;
+		bName = b.querySelector(".multiline").title;
+		if (aName < bName) {
+			return -1;
+		}
+		else if (aName > bName) {
+			return 1;
+		}
+		else {
+			return 0;
+		}
+	}
+}
+
+function sortCoursesFav () {
+	const dashboardCard = document.querySelectorAll(".dashboard-card");
+	const Courses = [];
+	dashboardCard.forEach(function (elem, index) {
+		Courses[index] = elem;
+		// console.log(elem);
+		elem.remove();
+	});
+
+	// console.log(Courses);
+	Courses.sort(compareFn);
+
+	// Ajout sur le cour
+	const coursesContainer = document.querySelector(".card-deck.dashboard-card-deck");
+	Courses.forEach(function (course, idx) {
+		coursesContainer.insertBefore(course, null);
+	});
+}
+
 async function BetterMoodle() {
-	// ##########################################################################################
-	// Pour la page de login (+ BetterMoodle)
-	if (location.href == "https://learning.esiea.fr/login/index.php") {
+	
+	// -------------------- Variables / Constantes --------------------
+	const pathName = window.location.pathname.toString();
+	var navBarTmp = document.getElementsByClassName("navbar fixed-top navbar-dark bg-primary navbar-expand");
+	const navBar = navBarTmp.length == 0 ? 0 : navBarTmp[0];
+
+	// -------------------- Pour la page de login --------------------
+	if (pathName == "/login/index.php") {
 		try {
 			// Si on est deja connecté sur un autre onglet
 			if (document.getElementById("notice") !== null) {
@@ -321,40 +372,15 @@ async function BetterMoodle() {
 			console.log(e);
 		}
 	}
-	// ##########################################################################################
 
-	// ##########################################################################################
-	// Pour les cours qui sont epinglé dans la navbar
-	const pathName = window.location.pathname.toString();
-	const navBar = document.getElementsByClassName("navbar fixed-top navbar-dark bg-primary navbar-expand ").length;
-
-	if (!!navBar) {
-		// Pour la navbar
+	// -------------------- Pour la bar de navigation --------------------
+	if (!!navBar.length) {
+		// Pour la navBar
 		try {
 			// Pour aligner les pinnedCourses
 			document.getElementsByClassName("nav-item ")[0].style.display = "flex";
 
-			if (pathName == "/my/") {
-				// Pour creer les pins (car les board ne sont pas encore creer)
-
-				// Pour le background 
-				document.getElementsByClassName("bg-primary")[0].style.cssText = "background-color: #243b5269 !important";
-				Pin();
-
-				sleep(1000).then(() => {
-					// Pour update les pin
-					const pinButon = document.querySelectorAll(".dropdown-item.pin");
-					console.log("Pin button", pinButon.length);
-					for (let i = 0; i < pinButon.length; i++) {
-						pinButon[i].addEventListener("click", function (elem) {
-							const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
-							const name = elem.target.name;
-							console.log("Name : " + elem.target.name + "\nUrl : " + url);
-							ChangePinState(name, url);
-						});
-					}
-				});
-			} else {
+			if (pathName != "/my/") {
 				// Pour creer les pin dans la nav bar
 				PinCourse();
 			}
@@ -362,10 +388,269 @@ async function BetterMoodle() {
 			console.log("Pas de pin", e);
 		}
 	}
-	// ##########################################################################################
 
-	// ##########################################################################################
-	// Pour les quizz
+	// -------------------- Dans le tableau de bord --------------------
+	if (pathName == "/my/") {
+		// Recuperer l'url
+		backgroundUrl = localStorage.getItem("BackgroundURL");
+
+		// Les cards
+		var dashboardCard = await waitForAllElm(".dashboard-card");
+
+		// ---------- Pour trier les cours selon les favoris ----------
+		try {
+			// Pour faire le trie (dans le menu de selection)
+			const sortMenu = await waitForElm("[class='dropdown-menu show'], [aria-labelledby='sortingdropdown']");
+			const sortMenuItem = document.createElement("li");
+
+			const sortFavItem = document.createElement("button");
+			sortFavItem.className = "dropdown-item";
+			sortFavItem.role = "menuitem";
+			sortFavItem.dataset.pref = "favorites";
+			sortFavItem.innerText = "Trier par favoris";
+
+			sortMenuItem.appendChild(sortFavItem);
+			sortMenu.appendChild(sortMenuItem);
+
+			if (localStorage.getItem("CoursesSorting") == "favorites") {
+				sortMenu.querySelector("[aria-current='true']").removeAttribute("aria-current");
+				sortFavItem.setAttribute("aria-current", "true");
+				sortCoursesFav(dashboardCard);
+			}
+
+			sortMenu.childNodes.forEach(function (elem) {
+				if (!!elem.children) {
+					elem.addEventListener("click", function () {
+						dashboardCard = document.querySelectorAll(".dashboard-card");
+						const listItem = elem.querySelector(".dropdown-item");
+						localStorage.setItem("CoursesSorting", listItem.dataset.pref);
+
+						sortMenu.querySelector("[aria-current='true']").removeAttribute("aria-current");
+						listItem.setAttribute("aria-current", "true");
+
+						if (listItem.dataset.pref == "favorites") {
+							sortCoursesFav(dashboardCard);
+						}
+					});
+				}
+			});
+
+			dashboardCard = await waitForAllElm(".dashboard-card");
+		} 
+		catch (e) {
+			console.log("Pas de tri\n", e);
+		}
+		
+		// ---------- Pour les pins ----------
+		try {
+			Pin();
+
+			// Pour update les pin
+			document.getElementsByClassName("nav-item ")[0].style.display = "flex";
+			const pinButon = await waitForAllElm(".dropdown-item.pin");
+
+			for (let i = 0; i < pinButon.length; i++) {
+				pinButon[i].addEventListener("click", function (elem) {
+					const url = elem.target.parentNode.parentNode.parentNode.parentNode.parentNode.childNodes[1].href.toString();
+					const name = elem.target.name;
+					ChangePinState(name, url);
+				});
+			}
+		} 
+		catch (e) {
+			console.log("Pas de pin\n", e);
+		}
+
+		// ---------- Pour l'UI et le theme ----------
+		const themeColor = "#000000";
+		const themeColorInvert = invertColor(themeColor);
+		const transparent = "#ffffff00";
+
+		try {
+
+			// ---------- Pour ameliorer l'UI ----------
+			// Enleve le bandeau en haut
+			document.getElementById("inst1310").remove();
+			document.getElementsByClassName("mt-0")[0].remove();
+
+			// Enleve le lien vers l'EDT et le remplacer dans le menu
+			document.querySelector("a[href='https://edt.esiea.fr/']").parentNode.remove();
+			const infoList = document.querySelector(".no-overflow").lastChild;
+			const edtLink = document.createElement("li");
+			edtLink.innerHTML = "<a href='https://edt.esiea.fr/' target='_blank'>Emploi du temps</a>";
+			infoList.insertBefore(edtLink, infoList.firstChild);
+
+			// ---------- Pour le theme ----------
+			// Pour les cards + le container
+			const card = await waitForAllElm(".card");
+			card.forEach(function (elem) {
+				elem.style.backgroundColor = transparent;
+			});
+
+			// Pour la navbar
+			const bgPrimary = await waitForAllElm(".bg-primary");
+			bgPrimary.forEach(function (elem) {
+				elem.style.cssText = `background-color: #243b5269 !important`;
+			});			
+
+			dashboardCard.forEach(function (elem) {
+				elem.style.backgroundColor = `${themeColor}a0`;
+				elem.style.border = "1px solid rgb(255 255 255)";
+				// elem.style.border = "1.5px solid"
+				// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
+			});
+
+			// Pour la scrollbar
+			document.querySelector("#page.drawers").style.scrollbarColor = `#6a737b #ffffff24`;
+
+			// Le bg de la page
+			document.body.style.backgroundImage = backgroundUrl;
+			document.body.style.backgroundSize = "1920px 1080px";
+			document.body.style.backgroundColor = themeColor;
+			document.body.style.color = themeColorInvert;
+
+			// Derriere "Tableau de bord"
+			const container = document.getElementById("topofscroll");
+			container.style.backgroundColor = transparent;
+			container.style.color = themeColor;
+
+			// Pour les textes et les icon
+			const text = await waitForAllElm(".progress-text, .main-inner, .categoryname, .icon, a, .dropdown-item");
+			text.forEach(function (elem) {
+				elem.style.color = themeColorInvert;
+			});
+
+			// Les boutons
+			document.querySelectorAll(".btn, .dropdown-menu").forEach(function (elem) {
+				if (elem.className == "btn dropdown-toggle") return;
+
+				if (elem.className.includes("dropdown-toggle")) {
+					elem.style.backgroundColor = `${themeColor}69`;
+					elem.style.color = themeColorInvert;
+					return;
+				}
+
+				// Pour les options des cards des cours
+				if (elem.className.includes("dropdown-menu")) {
+					elem.style.backgroundColor = `${themeColor}a0`;
+					elem.style.color = themeColorInvert;
+					elem.style.border = `1px solid ${themeColorInvert}`;
+					return;
+				}
+
+				elem.style.backgroundColor = `${invertColor(themeColor)}69`;
+			});
+
+			// Pour le bas des cards
+			const cardFooter = await waitForAllElm(".bg-white");
+			cardFooter.forEach(function (elem) {
+				elem.style.cssText = `background-color: ${transparent} !important`;
+			});
+
+			// Pour le menu de droite
+			const rightMenu = await waitForAllElm(".drawer");
+			rightMenu.forEach(function (elem) {
+				elem.style.backgroundColor = `${themeColor}69`;
+
+				elem.querySelectorAll(".card.mb-3").forEach(function (elem2) {
+					elem2.style.border = "1px solid";
+				});
+			});
+
+			// Pour le menu du profil
+			const profileMenu = await waitForElm(".dropdown-menu-right");
+			profileMenu.style.backgroundColor = `${themeColor}a0`;
+			profileMenu.style.border = `1px solid ${themeColorInvert}`;
+
+			// Pour les notifications
+			document.getElementsByClassName("popover-region-container")[0].style.backgroundColor = `${themeColor}a0`;
+		} catch (e) {
+			console.log("Theme dans le menu\n", e);
+		}
+	}
+
+	// -------------------- Dans un cours --------------------
+	if (pathName.includes("/course/")) {
+		
+		// ---------- Pour le theme ----------
+		const themeColor = "#202020";
+		const themeColorInvert = invertColor(themeColor);
+		const transparent = "#ffffff00";
+
+		try {
+			// Pour le bg
+			document.body.style.backgroundColor = themeColor;
+			document.body.style.color = themeColorInvert;
+
+			document.getElementById("region-main").style.backgroundColor = transparent;
+			document.getElementById("topofscroll").style.backgroundColor = transparent;
+
+			document.querySelectorAll(".navigation, .nav-tabs").forEach(function (elem) {
+				elem.style.backgroundColor = transparent;
+			});
+
+			// Pour les texts
+			const text = await waitForAllElm("a, .icon, .activity-count");
+			console.log("Text : ", text);
+			text.forEach(function (elem) {
+				elem.style.color = themeColorInvert;
+			});
+
+			const xpText = await waitForAllElm(".block_xp *");
+			xpText.forEach(function (elem) {
+				elem.style.cssText = `color: ${themeColorInvert} !important`;
+			});
+
+			// Pour le menu de navigation de droite
+			const rightMenu = await waitForAllElm(".drawer");
+			rightMenu.forEach(function (elem) {
+				elem.style.backgroundColor = `${themeColor}69`;
+			});
+
+			const xpMenu = await waitForAllElm(".card");
+			xpMenu.forEach(function (elem) {
+				elem.style.backgroundColor = transparent;
+				elem.style.border = `1px solid ${themeColorInvert}`;
+			});
+
+			const bgSecondary = await waitForAllElm(".bg-secondary");
+			bgSecondary.forEach(function (elem) {
+				// console.log(elem);
+				elem.style.cssText = `background-color: ${themeColorInvert}69 !important`;
+			});
+
+			// Pour le menu d'info de l'xp
+			const xpInfo = await waitForElm(".alert-info");
+			xpInfo.style.backgroundColor = `${themeColorInvert}3d`;
+
+			// Les boutons
+			document.querySelectorAll(".btn").forEach(function (elem) {
+				if (elem.className == "btn dropdown-toggle") return;
+				if (elem.className.includes("dropdown-toggle")) {
+					elem.style.backgroundColor = `${themeColor}69`;
+					elem.style.color = themeColorInvert;
+					return;
+				}
+				elem.style.backgroundColor = `${invertColor(themeColor)}69`;
+			});
+
+			// Pour la selection dans le cours
+			// document.styleSheets[5].cssRules.forEach(function (elem) {
+			// 	if (elem.selectorText && (elem.selectorText.includes(".moremenu .nav-link:hover") || elem.selectorText.includes(".moremenu .nav-link.active:hover"))) {
+			// 		elem.style.backgroundColor = `${themeColorInvert}69`;
+			// 	}
+			// });
+
+			// Pour les hover
+			// document.querySelectorAll(".nav-link, .moremenu").forEach( function (elem) {
+			// 	elem.style.cssText = `.moremenu .nav-link:hover,.moremenu .nav-link:focus {border-color: #7f252500; background-color: ${themeColorInvert}a9;}`;
+			// });
+		} catch (e) {
+			console.log("Theme dans le cour\n", e);
+		}
+	}
+
+	// -------------------- Dans un quiz --------------------
 	if (pathName.includes("/quiz/") && window.location.search.includes("attempt=")) {
 		const attempt = window.location.search.split("attempt=")[1].split("&")[0];
 
@@ -625,18 +910,16 @@ async function BetterMoodle() {
 			}
 		}
 	}
-	// ##########################################################################################
-
-	// ##########################################################################################
-	// Pour refaire les évaluations 
+	
+	// -------------------- Dans la page du resume d'une evaluation (avec SEB -> 'secure') --------------------
 	if (pathName.includes("/quiz/view") && document.body.className.includes("secure")) {
 		const table = document.getElementsByClassName("generaltable quizattemptsummary")[0];
 		table.childNodes[2].childNodes[1].insertCell(-1).outerHTML = "<th class='header c4 lastcol' style='text-align:center;' scope='col'>Refaire</th>";
 		const reviewUrl = table.childNodes[4].childNodes[0].childNodes[7].childNodes[0].href;
 		table.childNodes[4].childNodes[0].insertCell(-1).outerHTML = `<td class='cell c3 lastcol' style='text-align:center;'><a title='Relire vos réponses à cette tentative' href="${reviewUrl}&evaluate=200">Refaire</a></td>`;
 	}
-
-	// Dans "refaire" pour reset les evalations 
+	
+	// -------------------- Dans la page de l'evaluation qui a etait reset --------------------
 	// Il faut faire le temps + les points 
 	if (pathName.includes("/quiz/") && window.location.href.includes("&evaluate=")) {
 		
@@ -807,87 +1090,6 @@ async function BetterMoodle() {
 
 			// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
 		});
-	}
-	// ##########################################################################################
-
-	// ##########################################################################################
-	// Pour le theme
-	if (location.href == "https://learning.esiea.fr/my/") {
-		const theme = 'dark';
-		const themeColor = "#000000";
-		const themeColorInvert = invertColor(themeColor);
-		const transparent = "#ffffff00";
-
-		// Recuperer l'url 
-		backgroundUrl = localStorage.getItem("BackgroundURL");
-		
-		// Pour les cards + le container
-		const card = await waitForAllElm(".card");
-		card.forEach( function (elem) {
-			elem.style.backgroundColor = transparent;
-		});
-		
-		// Les cards
-		const dashboardCard = await waitForAllElm(".dashboard-card");
-		dashboardCard.forEach( function (elem) {
-			elem.style.backgroundColor = `${themeColor}a0`
-			elem.style.border = "1px solid rgb(255 255 255)"
-			// elem.style.border = "1.5px solid"
-			// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
-		});
-
-		// Enleve le bandeau en haut 
-		document.getElementById("inst1310").remove();
-		document.getElementsByClassName("mt-0")[0].remove();
-		
-		// Le bg de la page 
-		document.body.style.backgroundImage = backgroundUrl;
-		document.body.style.backgroundSize = "1920px 1080px";
-		document.body.style.color = themeColorInvert;
-		
-		// Derriere "Tableau de bord"
-		const container = document.getElementById("topofscroll");
-		container.style.backgroundColor = transparent;
-		container.style.color = themeColor;
-		
-		// Pour les textes et les icon
-		const text = await waitForAllElm(".progress-text, .main-inner, .categoryname, .icon, a");
-		text.forEach( function (elem) {
-			elem.style.color = themeColorInvert;
-		});
-		
-		// Les boutons 
-		document.querySelectorAll(".btn").forEach( function (elem) {
-			if (elem.className == "btn dropdown-toggle") return;
-			if (elem.className.includes("dropdown-toggle")) {
-				elem.style.backgroundColor = `${themeColor}69`
-				elem.style.color = themeColorInvert;
-				return;
-			}
-			elem.style.backgroundColor = `${invertColor(themeColor)}69`
-		});
-		
-		// Pour le bas des cards
-		const cardFooter = await waitForAllElm(".bg-white");
-		cardFooter.forEach( function (elem) {
-			elem.style.cssText = `background-color: ${transparent} !important`
-		});
-		
-		// Pour le menu de droite
-		const rightMenu = await waitForAllElm(".drawer");
-		rightMenu.forEach( function (elem) {
-			elem.style.backgroundColor = `${themeColor}69`;
-			
-			elem.querySelectorAll(".card.mb-3").forEach ( function (elem2) {
-				elem2.style.border = "1px solid";
-			});
-		});
-
-		// Pour le menu du profil 
-		const profileMenu = await waitForElm(".dropdown-menu-right");
-		// console.log(profileMenu);
-		profileMenu.style.backgroundColor = `${themeColor}a0`;
-		profileMenu.style.border = `1px solid ${themeColorInvert}`;
 	}
 }
 
