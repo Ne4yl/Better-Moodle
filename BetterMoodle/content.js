@@ -374,7 +374,8 @@ async function BetterMoodle() {
 	}
 
 	// -------------------- Pour la bar de navigation --------------------
-	if (!!navBar.length) {
+	if (navBar) {
+		console.log("In nav");
 		// Pour la navBar
 		try {
 			// Pour aligner les pinnedCourses
