@@ -234,6 +234,11 @@ async function BetterMoodle() {
 	var navBarTmp = document.getElementsByClassName("navbar fixed-top navbar-dark bg-primary navbar-expand");
 	const navBar = navBarTmp.length == 0 ? 0 : navBarTmp[0];
 
+	// Theme
+	const themeColor = "#000000";
+	const themeColorInvert = invertColor(themeColor);
+	const transparent = "#ffffff00";
+
 	// -------------------- Pour la page de login --------------------
 	if (pathName == "/login/index.php") {
 		try {
@@ -244,7 +249,7 @@ async function BetterMoodle() {
 
 			// --------------------- Pour le desing de la page ---------------------
 			// Pour changer le background
-			document.getElementById("page-login-index").style.backgroundImage = localStorage.getItem("BackgroundURL");
+			document.getElementById("page-login-index").style.backgroundImage = localStorage.getItem("BackgroundURL_login");
 
 			// Pour changer la couleur du texte du login
 			document.getElementById("page-login-index").style.color = "white";
@@ -292,7 +297,7 @@ async function BetterMoodle() {
 			// Change la couleur du texte du bouton "login"
 			document.getElementsByClassName("btn")[0].style.color = "#ffffff";
 
-			// --------------------- Pour afficher le menu ---------------------
+			// ---------- Pour afficher le menu ----------
 			// Creation de la div du menu et de son style
 			const BetterMoodle = document.createElement("div");
 			BetterMoodle.id = "Better Moodle";
@@ -309,43 +314,85 @@ async function BetterMoodle() {
 			const Title = document.createElement("h3");
 			Title.innerText = "Better Moodle Menu";
 
+			// ---------- Pour les images ----------
+			const DivImg = document.createElement("div");
+
 			// Description input
-			const DescInput = document.createElement("p");
-			DescInput.innerText = "Entré l'url de l'image qui vous voulez";
-			DescInput.marginBlackEnd = "10px";
-			DescInput.marginBotton = "0";
+			const DescImg = document.createElement("p");
+			DescImg.innerText = "Entré l'url de l'image qui vous voulez pour l'image de fond du login et du tableau de bord";
+			DescImg.marginBlackEnd = "10px";
+			DescImg.marginBotton = "0";
 
-			// L'input image de fond
-			const InputImg = document.createElement("input");
-			InputImg.id = "InputImg";
-			InputImg.type = "url";
-			InputImg.value = "https://images3.alphacoders.com/133/1332803.png";
-			InputImg.style.borderRadius = "0.5em";
-			InputImg.style.backgroundColor = "rgba(0,0,0,0)";
-			InputImg.style.color = "white";
-			InputImg.style.border = "1px solid white";
-			InputImg.style.paddingInlineStart = "1em";
-			InputImg.style.paddingInlineEnd = "0.5em";
-			InputImg.style.paddingTop = "0.3em";
-			InputImg.style.paddingBottom = "0.3em";
-			InputImg.style.width = "100%";
+			// L'input image de fond du login 
+			// url("https://images3.alphacoders.com/133/1332803.png")
+			const InputLoginImg = document.createElement("input");
+			InputLoginImg.className = "inputImg login";
+			InputLoginImg.type = "url";
+			InputLoginImg.placeholder = "Url de l'image de fond du login";
+			InputLoginImg.style.cssText = "border-radius: 0.5em; background-color: rgba(0,0,0,0); color: white; border: 1px solid white; padding-inline-start: 1em; padding-inline-end: 0.5em; padding-top: 0.3em; padding-bottom: 0.3em; width: 100%;";
 
-			// Ajout des "options" au menu
+			// L'input image de fond de tableau de bord
+			const InputCoursesImg = document.createElement("input");
+			InputCoursesImg.className = "inputImg courses";
+			InputCoursesImg.type = "url";
+			InputCoursesImg.placeholder = "Url de l'image de tableau de bord";
+			InputCoursesImg.style.cssText = "margin-top: 0.5em; border-radius: 0.5em; background-color: rgba(0,0,0,0); color: white; border: 1px solid white; padding-inline-start: 1em; padding-inline-end: 0.5em; padding-top: 0.3em; padding-bottom: 0.3em; width: 100%;";
+			
+			DivImg.appendChild(DescImg);
+			DivImg.appendChild(InputLoginImg);
+			DivImg.appendChild(InputCoursesImg);
+			
+			// ---------- Pour les couleurs du theme ----------
+			const DivTheme = document.createElement("div");
+
+			// La selection du theme (couleurs)
+			const DescTheme = document.createElement("p");
+			DescTheme.innerText = "Choisissez les couleurs du theme";
+			DescTheme.marginBlackEnd = "10px";
+			DescTheme.marginTop = "1rem";
+			DescTheme.marginBotton = "0";
+
+			var head  = document.getElementsByTagName('head')[0];
+			var link  = document.createElement('link');
+			link.id   = 'cssId';
+			link.rel  = 'stylesheet';
+			link.type = 'text/css';
+			link.href = 'https://github.com/Ne4yl/Better-Moodle/blob/main/BetterMoodle/coloris.min.css';
+			link.media = 'all';
+			head.appendChild(link);
+
+			const InputTheme = document.createElement("input");
+			InputTheme.className = "inputTheme";
+			InputTheme.type = "text"; 
+			InputTheme.setAttribute("data-coloris", '');
+
+			DivTheme.appendChild(DescTheme);
+			DivTheme.appendChild(InputTheme);
+
+			// ---------- Pour ajouter les options au menu ----------
 			BetterMoodle.appendChild(Title);
-			BetterMoodle.appendChild(DescInput);
-			BetterMoodle.appendChild(InputImg);
+			BetterMoodle.appendChild(DivImg);
+			BetterMoodle.appendChild(DivTheme);
 
 			// Ajoute le menu a la page
 			const page = document.getElementById("page-wrapper");
 			document.body.insertBefore(BetterMoodle, page);
 
-			var ImgButton = document.querySelector("input");
-			ImgButton.addEventListener("keyup", (event) => {
-				if (event.keyCode == 13) {
-					document.getElementById("page-login-index").style.backgroundImage = "url(" + ImgButton.value + ")";
-					localStorage.setItem("BackgroundURL", "url(" + ImgButton.value + ")");
-				}
-			});
+			var ImgButton = document.querySelectorAll(".inputImg");
+			ImgButton.forEach(function (inputs) {
+				inputs.addEventListener("keyup", (event) => {
+					if (event.keyCode == 13) {
+						var selection = inputs.className.split(" ")[1];
+						localStorage.setItem(`BackgroundURL_${selection}`, "url(" + inputs.value + ")");
+						inputs.value = "";
+						inputs.placeholder = "Loaded";
+						inputs.blur();
+						
+						if (selection == "login")
+							document.getElementById("page-login-index").style.backgroundImage = "url(" + inputs.value + ")";
+					}
+				});
+			})
 
 			// --------------------- Pour le menu ---------------------
 			document.addEventListener("keypress", logKey);
@@ -393,7 +440,7 @@ async function BetterMoodle() {
 	// -------------------- Dans le tableau de bord --------------------
 	if (pathName == "/my/") {
 		// Recuperer l'url
-		backgroundUrl = localStorage.getItem("BackgroundURL");
+		backgroundUrl = localStorage.getItem("BackgroundURL_courses");
 
 		// Les cards
 		var dashboardCard = await waitForAllElm(".dashboard-card");
@@ -463,10 +510,6 @@ async function BetterMoodle() {
 		}
 
 		// ---------- Pour l'UI et le theme ----------
-		const themeColor = "#000000";
-		const themeColorInvert = invertColor(themeColor);
-		const transparent = "#ffffff00";
-
 		try {
 
 			// ---------- Pour ameliorer l'UI ----------
@@ -496,7 +539,7 @@ async function BetterMoodle() {
 
 			dashboardCard.forEach(function (elem) {
 				elem.style.backgroundColor = `${themeColor}a0`;
-				elem.style.border = "1px solid rgb(255 255 255)";
+				elem.style.border = `1px solid ${themeColorInvert}`;
 				// elem.style.border = "1.5px solid"
 				// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
 			});
@@ -574,14 +617,13 @@ async function BetterMoodle() {
 	if (pathName.includes("/course/")) {
 		
 		// ---------- Pour le theme ----------
-		const themeColor = "#202020";
-		const themeColorInvert = invertColor(themeColor);
-		const transparent = "#ffffff00";
+		const themeColorCourse = "#202020";
+		const themeColorCourseInvert = invertColor(themeColorCourse);
 
 		try {
 			// Pour le bg
-			document.body.style.backgroundColor = themeColor;
-			document.body.style.color = themeColorInvert;
+			document.body.style.backgroundColor = themeColorCourse;
+			document.body.style.color = themeColorCourseInvert;
 
 			document.getElementById("region-main").style.backgroundColor = transparent;
 			document.getElementById("topofscroll").style.backgroundColor = transparent;
@@ -594,58 +636,62 @@ async function BetterMoodle() {
 			const text = await waitForAllElm("a, .icon, .activity-count");
 			console.log("Text : ", text);
 			text.forEach(function (elem) {
-				elem.style.color = themeColorInvert;
+				elem.style.color = themeColorCourseInvert;
 			});
 
 			const xpText = await waitForAllElm(".block_xp *");
 			xpText.forEach(function (elem) {
-				elem.style.cssText = `color: ${themeColorInvert} !important`;
+				elem.style.cssText = `color: ${themeColorCourseInvert} !important`;
 			});
 
 			// Pour le menu de navigation de droite
 			const rightMenu = await waitForAllElm(".drawer");
 			rightMenu.forEach(function (elem) {
-				elem.style.backgroundColor = `${themeColor}69`;
+				elem.style.backgroundColor = `${themeColorCourse}69`;
 			});
 
 			const xpMenu = await waitForAllElm(".card");
 			xpMenu.forEach(function (elem) {
 				elem.style.backgroundColor = transparent;
-				elem.style.border = `1px solid ${themeColorInvert}`;
+				elem.style.border = `1px solid ${themeColorCourseInvert}`;
 			});
 
 			const bgSecondary = await waitForAllElm(".bg-secondary");
 			bgSecondary.forEach(function (elem) {
 				// console.log(elem);
-				elem.style.cssText = `background-color: ${themeColorInvert}69 !important`;
+				elem.style.cssText = `background-color: ${themeColorCourseInvert}69 !important`;
 			});
 
 			// Pour le menu d'info de l'xp
 			const xpInfo = await waitForElm(".alert-info");
-			xpInfo.style.backgroundColor = `${themeColorInvert}3d`;
+			xpInfo.style.backgroundColor = `${themeColorCourseInvert}3d`;
 
 			// Les boutons
 			document.querySelectorAll(".btn").forEach(function (elem) {
 				if (elem.className == "btn dropdown-toggle") return;
 				if (elem.className.includes("dropdown-toggle")) {
-					elem.style.backgroundColor = `${themeColor}69`;
-					elem.style.color = themeColorInvert;
+					elem.style.backgroundColor = `${themeColorCourse}69`;
+					elem.style.color = themeColorCourseInvert;
 					return;
 				}
-				elem.style.backgroundColor = `${invertColor(themeColor)}69`;
+				elem.style.backgroundColor = `${invertColor(themeColorCourse)}69`;
 			});
 
 			// Pour la selection dans le cours
 			// document.styleSheets[5].cssRules.forEach(function (elem) {
 			// 	if (elem.selectorText && (elem.selectorText.includes(".moremenu .nav-link:hover") || elem.selectorText.includes(".moremenu .nav-link.active:hover"))) {
-			// 		elem.style.backgroundColor = `${themeColorInvert}69`;
+			// 		elem.style.backgroundColor = `${themeColorCourseInvert}69`;
 			// 	}
 			// });
 
 			// Pour les hover
-			// document.querySelectorAll(".nav-link, .moremenu").forEach( function (elem) {
-			// 	elem.style.cssText = `.moremenu .nav-link:hover,.moremenu .nav-link:focus {border-color: #7f252500; background-color: ${themeColorInvert}a9;}`;
-			// });
+			document.querySelectorAll(".nav-link, .moremenu").forEach( function (elem) {
+				elem.on("hover", function () {
+					console.log("hover");
+					elem.style.backgroundColor = transparent;
+				//elem.style.cssText = `.moremenu .nav-link:hover,.moremenu .nav-link:focus {border-color: #7f252500; background-color: ${themeColorCourseInvert}a9;}`;
+				});
+			});
 		} catch (e) {
 			console.log("Theme dans le cour\n", e);
 		}
