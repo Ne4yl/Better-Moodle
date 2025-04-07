@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Better Moodle",
-    "version": "1.2",
+    "version": "1.3.5",
     "description": "Better-Moodle is a Chrome extension designed to enhance the ESIEA ENT platform.",
     "icons": {
         "128": "icon128.png"
@@ -11,7 +11,8 @@
         {
             "run_at": "document_idle",
             "matches": ["https://learning.esiea.fr/*"],
-            "js": ["content.js"]
+            "js": ["Coloris/coloris.js", "content.js"],
+            "css": ["Coloris/coloris.css", "content.css"]
         }
     ]
 }

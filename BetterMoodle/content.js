@@ -227,6 +227,18 @@ function sortCoursesFav () {
 	});
 }
 
+function updateTheme (themeName, propretie, value) {
+	// Pour recuperer les themes
+	const themes = localStorage.getItem("themes") ? new Map(JSON.parse(localStorage.getItem("themes"))) : new Map();
+	var updatedTheme = themes.get(themeName) ? new Map(JSON.parse(themes.get(themeName))) : new Map();
+	updatedTheme.set(propretie, value);
+
+	// Pour stocker les themes
+	themes.set(themeName, JSON.stringify(Array.from(updatedTheme.entries())));
+	localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
+	return themes, updatedTheme;
+}
+
 async function BetterMoodle() {
 	
 	// -------------------- Variables / Constantes --------------------
@@ -235,8 +247,11 @@ async function BetterMoodle() {
 	const navBar = navBarTmp.length == 0 ? 0 : navBarTmp[0];
 
 	// Theme
-	const themeColor = "#000000";
-	const themeColorInvert = invertColor(themeColor);
+	var themes = localStorage.getItem("themes") ? new Map(JSON.parse(localStorage.getItem("themes"))) : new Map();
+	var currentTheme = themes.get("current") ? new Map(JSON.parse(themes.get("current"))) : new Map();
+	
+	const themeColor = currentTheme.get("MainThemeColor") ? currentTheme.get("MainThemeColor") : "#000000";// localStorage.getItem("MainThemeColor") ? localStorage.getItem("MainThemeColor") : "#000000";
+	const themeColorInvert = currentTheme.get("SecondaryThemeColor") ? currentTheme.get("SecondaryThemeColor") : "#ffffff"; // localStorage.getItem("SecondaryThemeColor") ? localStorage.getItem("SecondaryThemeColor") : invertColor(themeColor); 
 	const transparent = "#ffffff00";
 
 	// -------------------- Pour la page de login --------------------
@@ -246,153 +261,282 @@ async function BetterMoodle() {
 			if (document.getElementById("notice") !== null) {
 				location.replace("https://learning.esiea.fr/");
 			}
+			
+			// Pour pouvoir recuperer les themes
+			console.log("Current theme : ", currentTheme);
 
-			// --------------------- Pour le desing de la page ---------------------
-			// Pour changer le background
-			document.getElementById("page-login-index").style.backgroundImage = localStorage.getItem("BackgroundURL_login");
+			if (1) {
+				// --------------------- Pour le desing de la page ---------------------
+				// Pour changer le background
+				document.getElementById("page-login-index").style.backgroundImage = currentTheme.get("BackgroundURL_login");
 
-			// Pour changer la couleur du texte du login
-			document.getElementById("page-login-index").style.color = "white";
+				// Pour changer la couleur du texte du login
+				document.getElementById("page-login-index").style.color = "white";
 
-			// Pour fixer le login au centre malgrès le BetterMoodle
-			document.querySelector("#page").style.position = "absolute";
-			document.querySelector("#page").style.bottom = "36%";
+				// Pour fixer le login au centre malgrès le BetterMoodle
+				document.querySelector("#page").style.position = "absolute";
+				// document.querySelector("#page").style.bottom = "36%";
 
-			// Pour changer la couleur du fond du login
-			document.getElementsByClassName("login-container login-container-80t")[0].style.backgroundColor = "rgba(0, 0, 0, 0.7)";
-			document.getElementsByClassName("login-container login-container-80t")[0].style.borderRadius = "1.5rem";
-			document.getElementsByClassName("login-container login-container-80t")[0].style.padding = "2rem";
+				// Pour changer la couleur du fond du login
+				document.getElementsByClassName("login-container login-container-80t")[0].style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+				document.getElementsByClassName("login-container login-container-80t")[0].style.borderRadius = "1.5rem";
+				document.getElementsByClassName("login-container login-container-80t")[0].style.padding = "2rem";
 
-			// Change le titre du login et le centre
-			document.getElementsByClassName("login-heading mb-4")[0].innerHTML = "Esiea login page";
-			document.getElementsByClassName("login-heading mb-4")[0].align = "center";
+				// Change le titre du login et le centre
+				document.getElementsByClassName("login-heading mb-4")[0].innerHTML = "Esiea login page";
+				document.getElementsByClassName("login-heading mb-4")[0].align = "center";
 
-			// Suprime tous les espaces
-			document.querySelectorAll(".login-divider").forEach(function (elem) {
-				elem.remove();
+				// Suprime tous les espaces
+				document.querySelectorAll(".login-divider").forEach(function (elem) {
+					elem.remove();
+				});
+
+				// Suprime le "top" du login
+				document.getElementsByClassName("login-identityproviders")[0].style.top = "0";
+
+				// Suprime l'autre moyen de connexion
+				document.querySelector(".login-form").remove();
+
+				// Suprime les "about"
+				document.querySelector(".d-flex").remove();
+
+				// Suprime le pieds de page
+				document.querySelector("#page-footer").remove();
+
+				// Suprime le titre du login office
+				document.querySelector("div[class='login-identityproviders'] h2").remove();
+
+				// Suprime le logo office et change le titre du boutton du login
+				document.querySelector("a[class='btn login-identityprovider-btn btn-block btn-secondary']").innerHTML = "Login";
+				document.querySelector("a[class='btn login-identityprovider-btn btn-block btn-secondary']").removeAttributeNode;
+
+				// Change la couleur du fond du login
+				document.getElementsByClassName("btn")[0].style.backgroundColor = "#ffffff80";
+
+				// Change la couleur du texte du bouton "login"
+				document.getElementsByClassName("btn")[0].style.color = "#ffffff";
+
+				// Suprime l'erreur de login si il y en a une
+				var loginError = document.querySelector(".alert.alert-danger");
+				if (loginError) 
+					loginError.remove();
+
+				// ---------- Pour afficher le menu ----------
+				// Creation de la div du menu et de son style
+				const BetterMoodle = document.createElement("div");
+				BetterMoodle.id = "BetterMoodleMenu";
+
+				// ---------- Creation du menu de BetterMoodle ----------
+				// Le titre
+				const Title = document.createElement("h3");
+				Title.innerText = "Better Moodle Menu";
+
+				// ----- Pour les images -----
+				const DivImg = document.createElement("div");
+				DivImg.className = "section";
+
+				// Description section
+				const DescImg = document.createElement("h5");
+				DescImg.innerText = "Image de fond";
+
+				// L'input image de fond du login 
+				// url("https://images3.alphacoders.com/133/1332803.png")
+				const InputLoginImg = document.createElement("input");
+				InputLoginImg.className = "inputImg login";
+				InputLoginImg.type = "url";
+				InputLoginImg.value = currentTheme.get("BackgroundURL_login").slice(4, -1).replace(/"/g, "");
+				InputLoginImg.placeholder = "Url de l'image de fond du login";
+
+				// L'input image de fond de tableau de bord
+				const InputCoursesImg = document.createElement("input");
+				InputCoursesImg.className = "inputImg courses";
+				InputCoursesImg.type = "url";
+				InputCoursesImg.value = currentTheme.get("BackgroundURL_courses").slice(4, -1).replace(/"/g, "");
+				InputCoursesImg.placeholder = "Url de l'image du tableau de bord";
+				InputCoursesImg.style.marginTop = "0.5em";
+				
+				DivImg.appendChild(DescImg);
+				DivImg.appendChild(InputLoginImg);
+				DivImg.appendChild(InputCoursesImg);
+				
+				// ---------- Pour les couleurs du theme ----------
+				const DivTheme = document.createElement("div");
+				DivTheme.className = "section";
+				DivTheme.marginLeft = "1em";
+				
+				// ----- Pour la selection des themes -----
+				const ThemeSlector = document.createElement("div");
+				ThemeSlector.className = "switch-wrapper";
+				
+				const DescThemeSlector = document.createElement("h5");
+				DescThemeSlector.innerText = "Utiliser un theme personnalisé";
+				
+				const InputThemeSlector = document.createElement("input");
+				InputThemeSlector.className = "switch";
+				InputThemeSlector.type = "checkbox";
+				InputThemeSlector.style.cssText = "margin-left: 1em;";
+				InputThemeSlector.checked = localStorage.getItem("IsTheme") === 'true';
+
+				InputThemeSlector.addEventListener("change", function () {
+					currentTheme.set("IsTheme", InputThemeSlector.checked);
+					DivTheme.style.display = !InputThemeSlector.checked ? "none" : "block";
+				});
+
+				ThemeSlector.appendChild(DescThemeSlector);
+				ThemeSlector.appendChild(InputThemeSlector);
+
+				// La selection du theme (couleurs)
+				const DescTheme = document.createElement("h4");
+				DescTheme.innerText = "Choisissez les couleurs du theme";
+				DescTheme.style.marginLeft = "1em";
+
+				// ----- Pour le theme principale -----
+				const MainTheme = document.createElement("div");
+				MainTheme.className = "color-container square";
+				
+				const DescMainTheme = document.createElement("p");
+				DescMainTheme.innerText = "Couleur principale";
+				DescMainTheme.style.marginRight = "1em";
+
+				const InputMainTheme = document.createElement("input");
+				InputMainTheme.style = "width: 110px; height: 32px; border: 1px solid #ccc; border-radius: 5px; padding-left: 36px;"
+				InputMainTheme.className = "colorPicker Main";
+				InputMainTheme.type = "text";
+				InputMainTheme.value = currentTheme.get("MainThemeColor") ? currentTheme.get("MainThemeColor") : invertColor(themeColor);
+
+				MainTheme.appendChild(DescMainTheme);
+				MainTheme.appendChild(InputMainTheme);
+
+				// ----- Pour le theme secondaire -----
+				const SecondaryTheme = document.createElement("div");
+				SecondaryTheme.className = "color-container square";
+
+				const DescSecondaryTheme = document.createElement("p");
+				DescSecondaryTheme.innerText = "Couleur secondaire";
+				DescSecondaryTheme.style.marginRight = "1em";
+
+				const InputSecondaryTheme = document.createElement("input");
+				InputSecondaryTheme.style = "width: 110px; height: 32px; border: 1px solid #ccc; border-radius: 5px; padding-left: 36px;"
+				InputSecondaryTheme.className = "colorPicker Secondary";
+				InputSecondaryTheme.type = "text";
+				InputSecondaryTheme.value = currentTheme.get("SecondaryThemeColor") ? currentTheme.get("SecondaryThemeColor") : '#ffffff';
+
+				SecondaryTheme.appendChild(DescSecondaryTheme);
+				SecondaryTheme.appendChild(InputSecondaryTheme);
+
+				DivTheme.appendChild(DescTheme);
+				DivTheme.appendChild(MainTheme);
+				DivTheme.appendChild(SecondaryTheme);
+
+				// ----- Pour le bouton save -----
+				// Créez un conteneur div pour les éléments
+				const container = document.createElement('div');
+				container.id = 'theme-save-container';
+				container.style.display = 'flex';
+				container.style.alignItems = 'center';
+				container.style.marginTop = '10px';
+
+				// Créez l'élément input
+				const input = document.createElement('input');
+				input.type = 'text';
+				input.id = 'theme-name';
+				input.placeholder = 'Enter theme name';
+				input.style.padding = '5px';
+				input.style.border = '1px solid #ccc';
+				input.style.borderRadius = '4px';
+				input.style.marginRight = '10px';
+
+				// Créez le bouton
+				const button = document.createElement('button');
+				button.id = 'save-theme-button';
+				button.textContent = 'Save';
+				button.style.padding = '5px 10px';
+				button.style.border = 'none';
+				button.style.backgroundColor = '#31473A';
+				button.style.color = 'white';
+				button.style.borderRadius = '4px';
+				button.style.cursor = 'pointer';
+
+				// Pour le bouton save
+				button.addEventListener('click', () => {
+					console.log(currentTheme);
+					themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
+					themes.set("current", JSON.stringify(Array.from(currentTheme.entries())));
+					localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
+				});
+
+				// Ajoutez les éléments au conteneur
+				container.appendChild(input);
+				container.appendChild(button);
+
+				// ----- Pour le menu de selection -----
+				// Créez un conteneur div pour le menu de sélection
+				const selectContainer = document.createElement('div');
+				selectContainer.style.marginTop = '20px';
+
+				// Créez l'élément select
+				const select = document.createElement('select');
+				select.id = 'theme-select';
+				select.style.padding = '5px';
+				select.style.border = '1px solid #ccc';
+				select.style.borderRadius = '4px';
+
+				for (const [key, value] of themes.entries()) {
+					if (key == "current") continue;
+					const option = document.createElement('option');
+					option.value = value;
+					option.textContent = key;
+					select.appendChild(option);
+				};
+
+				selectContainer.appendChild(select);
+
+				DivTheme.appendChild(container);
+				DivTheme.appendChild(selectContainer);
+
+				// ----- Pour ajouter les options au menu -----
+				BetterMoodle.appendChild(Title);
+				BetterMoodle.appendChild(DivImg);
+				BetterMoodle.appendChild(ThemeSlector);
+				BetterMoodle.appendChild(DivTheme);
+
+				// Ajoute le menu a la page
+				const page = document.getElementById("page-wrapper");
+				document.body.insertBefore(BetterMoodle, page);
+
+				// ----- Ajout du css & js pour le color picker ----
+				Coloris({
+					el: '.colorPicker',
+					theme: 'pill',
+					themeMode: 'dark',
+					formatToggle: true,
+					alpha: false,
+				});
+			}
+
+			document.addEventListener('coloris:pick', event => {
+				themes, currentTheme = updateTheme("current", `${event.detail.currentEl.className.split(" ")[1]}ThemeColor`, event.detail.color);
+				console.log("Themes : ", themes, "Current theme : ", currentTheme);
 			});
-
-			// Suprime le "top" du login
-			document.getElementsByClassName("login-identityproviders")[0].style.top = "0";
-
-			// Suprime l'autre moyen de connexion
-			document.querySelector(".login-form").remove();
-
-			// Suprime les "about"
-			document.querySelector(".d-flex").remove();
-
-			// Suprime le pieds de page
-			document.querySelector("#page-footer").remove();
-
-			// Suprime le titre du login office
-			document.querySelector("div[class='login-identityproviders'] h2").remove();
-
-			// Suprime le logo office et change le titre du boutton du login
-			document.querySelector("a[class='btn login-identityprovider-btn btn-block btn-secondary']").innerHTML = "Login";
-			document.querySelector("a[class='btn login-identityprovider-btn btn-block btn-secondary']").removeAttributeNode;
-
-			// Change la couleur du fond du login
-			document.getElementsByClassName("btn")[0].style.backgroundColor = "#ffffff80";
-
-			// Change la couleur du texte du bouton "login"
-			document.getElementsByClassName("btn")[0].style.color = "#ffffff";
-
-			// ---------- Pour afficher le menu ----------
-			// Creation de la div du menu et de son style
-			const BetterMoodle = document.createElement("div");
-			BetterMoodle.id = "Better Moodle";
-			BetterMoodle.style.visibility = "hidden";
-			BetterMoodle.style.backgroundColor = "rgba(0,0,0,0.7)";
-			BetterMoodle.style.padding = "2rem";
-			BetterMoodle.style.width = "fit-content";
-			BetterMoodle.style.height = "fit-content";
-			BetterMoodle.style.borderRadius = "1.5rem";
-			BetterMoodle.style.margin = "1em";
-
-			// Creation des "options" du menu
-			// Le titre
-			const Title = document.createElement("h3");
-			Title.innerText = "Better Moodle Menu";
-
-			// ---------- Pour les images ----------
-			const DivImg = document.createElement("div");
-
-			// Description input
-			const DescImg = document.createElement("p");
-			DescImg.innerText = "Entré l'url de l'image qui vous voulez pour l'image de fond du login et du tableau de bord";
-			DescImg.marginBlackEnd = "10px";
-			DescImg.marginBotton = "0";
-
-			// L'input image de fond du login 
-			// url("https://images3.alphacoders.com/133/1332803.png")
-			const InputLoginImg = document.createElement("input");
-			InputLoginImg.className = "inputImg login";
-			InputLoginImg.type = "url";
-			InputLoginImg.placeholder = "Url de l'image de fond du login";
-			InputLoginImg.style.cssText = "border-radius: 0.5em; background-color: rgba(0,0,0,0); color: white; border: 1px solid white; padding-inline-start: 1em; padding-inline-end: 0.5em; padding-top: 0.3em; padding-bottom: 0.3em; width: 100%;";
-
-			// L'input image de fond de tableau de bord
-			const InputCoursesImg = document.createElement("input");
-			InputCoursesImg.className = "inputImg courses";
-			InputCoursesImg.type = "url";
-			InputCoursesImg.placeholder = "Url de l'image de tableau de bord";
-			InputCoursesImg.style.cssText = "margin-top: 0.5em; border-radius: 0.5em; background-color: rgba(0,0,0,0); color: white; border: 1px solid white; padding-inline-start: 1em; padding-inline-end: 0.5em; padding-top: 0.3em; padding-bottom: 0.3em; width: 100%;";
-			
-			DivImg.appendChild(DescImg);
-			DivImg.appendChild(InputLoginImg);
-			DivImg.appendChild(InputCoursesImg);
-			
-			// ---------- Pour les couleurs du theme ----------
-			const DivTheme = document.createElement("div");
-
-			// La selection du theme (couleurs)
-			const DescTheme = document.createElement("p");
-			DescTheme.innerText = "Choisissez les couleurs du theme";
-			DescTheme.marginBlackEnd = "10px";
-			DescTheme.marginTop = "1rem";
-			DescTheme.marginBotton = "0";
-
-			var head  = document.getElementsByTagName('head')[0];
-			var link  = document.createElement('link');
-			link.id   = 'cssId';
-			link.rel  = 'stylesheet';
-			link.type = 'text/css';
-			link.href = 'https://github.com/Ne4yl/Better-Moodle/blob/main/BetterMoodle/coloris.min.css';
-			link.media = 'all';
-			head.appendChild(link);
-
-			const InputTheme = document.createElement("input");
-			InputTheme.className = "inputTheme";
-			InputTheme.type = "text"; 
-			InputTheme.setAttribute("data-coloris", '');
-
-			DivTheme.appendChild(DescTheme);
-			DivTheme.appendChild(InputTheme);
-
-			// ---------- Pour ajouter les options au menu ----------
-			BetterMoodle.appendChild(Title);
-			BetterMoodle.appendChild(DivImg);
-			BetterMoodle.appendChild(DivTheme);
-
-			// Ajoute le menu a la page
-			const page = document.getElementById("page-wrapper");
-			document.body.insertBefore(BetterMoodle, page);
 
 			var ImgButton = document.querySelectorAll(".inputImg");
 			ImgButton.forEach(function (inputs) {
 				inputs.addEventListener("keyup", (event) => {
 					if (event.keyCode == 13) {
+						// Pour mettre a jour les themes
+						themes, currentTheme = updateTheme("current", `BackgroundURL_${selection}`, `url("${inputs.value}")`);
+						
+						// Pour changer le background
 						var selection = inputs.className.split(" ")[1];
-						localStorage.setItem(`BackgroundURL_${selection}`, "url(" + inputs.value + ")");
 						inputs.value = "";
 						inputs.placeholder = "Loaded";
 						inputs.blur();
-						
+
 						if (selection == "login")
-							document.getElementById("page-login-index").style.backgroundImage = "url(" + inputs.value + ")";
+							document.getElementById("page-login-index").style.backgroundImage = currentTheme.get("BackgroundURL_login");
 					}
 				});
-			})
+			});
 
 			// --------------------- Pour le menu ---------------------
 			document.addEventListener("keypress", logKey);
@@ -415,6 +559,13 @@ async function BetterMoodle() {
 					count++;
 				}
 			}
+
+			window.addEventListener("beforeunload", function () {
+				console.log(currentTheme);
+				themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
+				localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
+			});
+
 		} catch (e) {
 			console.log(e);
 		}
@@ -422,7 +573,7 @@ async function BetterMoodle() {
 
 	// -------------------- Pour la bar de navigation --------------------
 	if (navBar) {
-		console.log("In nav");
+
 		// Pour la navBar
 		try {
 			// Pour aligner les pinnedCourses
@@ -439,9 +590,12 @@ async function BetterMoodle() {
 
 	// -------------------- Dans le tableau de bord --------------------
 	if (pathName == "/my/") {
-		// Recuperer l'url
-		backgroundUrl = localStorage.getItem("BackgroundURL_courses");
+		// Recuperer les themes
+		var themes = localStorage.getItem("themes") ? new Map(JSON.parse(localStorage.getItem("themes"))) : new Map();
+		var currentTheme = themes.get("current") ? new Map(JSON.parse(themes.get("current"))) : new Map();
 
+		backgroundUrl = currentTheme.get("BackgroundURL_courses"); // localStorage.getItem("BackgroundURL_courses");
+		console.log("Background : ", backgroundUrl);
 		// Les cards
 		var dashboardCard = await waitForAllElm(".dashboard-card");
 
@@ -510,106 +664,113 @@ async function BetterMoodle() {
 		}
 
 		// ---------- Pour l'UI et le theme ----------
-		try {
+		if (localStorage.getItem("IsTheme") === 'true') {
+			try {
 
-			// ---------- Pour ameliorer l'UI ----------
-			// Enleve le bandeau en haut
-			document.getElementById("inst1310").remove();
-			document.getElementsByClassName("mt-0")[0].remove();
+				// ---------- Pour ameliorer l'UI ----------
+				// Enleve le bandeau en haut
+				document.getElementById("inst1310").remove();
+				document.getElementsByClassName("mt-0")[0].remove();
 
-			// Enleve le lien vers l'EDT et le remplacer dans le menu
-			document.querySelector("a[href='https://edt.esiea.fr/']").parentNode.remove();
-			const infoList = document.querySelector(".no-overflow").lastChild;
-			const edtLink = document.createElement("li");
-			edtLink.innerHTML = "<a href='https://edt.esiea.fr/' target='_blank'>Emploi du temps</a>";
-			infoList.insertBefore(edtLink, infoList.firstChild);
+				// Enleve le lien vers l'EDT et le remplacer dans le menu
+				document.querySelector("a[href='https://edt.esiea.fr/']").parentNode.remove();
+				const infoList = document.querySelector(".no-overflow").lastChild;
+				const edtLink = document.createElement("li");
+				edtLink.innerHTML = "<a href='https://edt.esiea.fr/' target='_blank'>Emploi du temps</a>";
+				infoList.insertBefore(edtLink, infoList.firstChild);
 
-			// ---------- Pour le theme ----------
-			// Pour les cards + le container
-			const card = await waitForAllElm(".card");
-			card.forEach(function (elem) {
-				elem.style.backgroundColor = transparent;
-			});
-
-			// Pour la navbar
-			const bgPrimary = await waitForAllElm(".bg-primary");
-			bgPrimary.forEach(function (elem) {
-				elem.style.cssText = `background-color: #243b5269 !important`;
-			});			
-
-			dashboardCard.forEach(function (elem) {
-				elem.style.backgroundColor = `${themeColor}a0`;
-				elem.style.border = `1px solid ${themeColorInvert}`;
-				// elem.style.border = "1.5px solid"
-				// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
-			});
-
-			// Pour la scrollbar
-			document.querySelector("#page.drawers").style.scrollbarColor = `#6a737b #ffffff24`;
-
-			// Le bg de la page
-			document.body.style.backgroundImage = backgroundUrl;
-			document.body.style.backgroundSize = "1920px 1080px";
-			document.body.style.backgroundColor = themeColor;
-			document.body.style.color = themeColorInvert;
-
-			// Derriere "Tableau de bord"
-			const container = document.getElementById("topofscroll");
-			container.style.backgroundColor = transparent;
-			container.style.color = themeColor;
-
-			// Pour les textes et les icon
-			const text = await waitForAllElm(".progress-text, .main-inner, .categoryname, .icon, a, .dropdown-item");
-			text.forEach(function (elem) {
-				elem.style.color = themeColorInvert;
-			});
-
-			// Les boutons
-			document.querySelectorAll(".btn, .dropdown-menu").forEach(function (elem) {
-				if (elem.className == "btn dropdown-toggle") return;
-
-				if (elem.className.includes("dropdown-toggle")) {
-					elem.style.backgroundColor = `${themeColor}69`;
-					elem.style.color = themeColorInvert;
-					return;
-				}
-
-				// Pour les options des cards des cours
-				if (elem.className.includes("dropdown-menu")) {
-					elem.style.backgroundColor = `${themeColor}a0`;
-					elem.style.color = themeColorInvert;
-					elem.style.border = `1px solid ${themeColorInvert}`;
-					return;
-				}
-
-				elem.style.backgroundColor = `${invertColor(themeColor)}69`;
-			});
-
-			// Pour le bas des cards
-			const cardFooter = await waitForAllElm(".bg-white");
-			cardFooter.forEach(function (elem) {
-				elem.style.cssText = `background-color: ${transparent} !important`;
-			});
-
-			// Pour le menu de droite
-			const rightMenu = await waitForAllElm(".drawer");
-			rightMenu.forEach(function (elem) {
-				elem.style.backgroundColor = `${themeColor}69`;
-
-				elem.querySelectorAll(".card.mb-3").forEach(function (elem2) {
-					elem2.style.border = "1px solid";
+				// ---------- Pour le theme ----------
+				// Pour les cards + le container
+				const card = await waitForAllElm(".card, .content-item-container.notification");
+				card.forEach(function (elem) {
+					elem.style.backgroundColor = transparent;
 				});
-			});
 
-			// Pour le menu du profil
-			const profileMenu = await waitForElm(".dropdown-menu-right");
-			profileMenu.style.backgroundColor = `${themeColor}a0`;
-			profileMenu.style.border = `1px solid ${themeColorInvert}`;
+				document.querySelectorAll(".content-item-container.notification").forEach(function (elem) {
+					elem.style.backgroundColor = transparent;
+				});
 
-			// Pour les notifications
-			document.getElementsByClassName("popover-region-container")[0].style.backgroundColor = `${themeColor}a0`;
-		} catch (e) {
-			console.log("Theme dans le menu\n", e);
+				// Pour la navbar
+				const bgPrimary = await waitForAllElm(".bg-primary");
+				bgPrimary.forEach(function (elem) {
+					// elem.style.cssText = `background-color: #243b5269 !important`;
+					elem.style.cssText = `background-color: ${themeColor}69 !important`;
+				});			
+
+				dashboardCard.forEach(function (elem) {
+					elem.style.backgroundColor = `${themeColor}a0`;
+					elem.style.border = `1px solid ${themeColorInvert}`;
+					// elem.style.border = "1.5px solid"
+					// elem.style.borderImage = "linear-gradient(45deg, rgb(255 0 0) 0%, rgb(0 255 254) 100%) 1"
+				});
+
+				// Pour la scrollbar
+				document.querySelector("#page.drawers").style.scrollbarColor = `#6a737b #ffffff24`;
+
+				// Le bg de la page
+				document.body.style.backgroundImage = backgroundUrl;
+				document.body.style.backgroundSize = "1920px 1080px";
+				document.body.style.backgroundColor = themeColor;
+				document.body.style.color = themeColorInvert;
+
+				// Derriere "Tableau de bord"
+				const container = document.getElementById("topofscroll");
+				container.style.backgroundColor = transparent;
+				container.style.color = themeColor;
+
+				// Pour les textes et les icon
+				const text = await waitForAllElm(".progress-text, .main-inner, .categoryname, .icon, a, .dropdown-item");
+				text.forEach(function (elem) {
+					elem.style.color = themeColorInvert;
+				});
+
+				// Les boutons
+				document.querySelectorAll(".btn, .dropdown-menu").forEach(function (elem) {
+					if (elem.className == "btn dropdown-toggle") return;
+
+					if (elem.className.includes("dropdown-toggle")) {
+						elem.style.backgroundColor = `${themeColor}69`;
+						elem.style.color = themeColorInvert;
+						return;
+					}
+
+					// Pour les options des cards des cours
+					if (elem.className.includes("dropdown-menu")) {
+						elem.style.backgroundColor = `${themeColor}a0`;
+						elem.style.color = themeColorInvert;
+						elem.style.border = `1px solid ${themeColorInvert}`;
+						return;
+					}
+
+					elem.style.backgroundColor = `${invertColor(themeColor)}69`;
+				});
+
+				// Pour le bas des cards
+				const cardFooter = await waitForAllElm(".bg-white");
+				cardFooter.forEach(function (elem) {
+					elem.style.cssText = `background-color: ${transparent} !important`;
+				});
+
+				// Pour le menu de droite
+				const rightMenu = await waitForAllElm(".drawer");
+				rightMenu.forEach(function (elem) {
+					elem.style.backgroundColor = `${themeColor}69`;
+
+					elem.querySelectorAll(".card.mb-3").forEach(function (elem2) {
+						elem2.style.border = "1px solid";
+					});
+				});
+
+				// Pour le menu du profil
+				const profileMenu = await waitForElm(".dropdown-menu-right");
+				profileMenu.style.backgroundColor = `${themeColor}a0`;
+				profileMenu.style.border = `1px solid ${themeColorInvert}`;
+
+				// Pour les notifications
+				document.getElementsByClassName("popover-region-container")[0].style.backgroundColor = `${themeColor}a0`;
+			} catch (e) {
+				console.log("Theme dans le menu\n", e);
+			}
 		}
 	}
 
@@ -621,6 +782,7 @@ async function BetterMoodle() {
 		const themeColorCourseInvert = invertColor(themeColorCourse);
 
 		try {
+
 			// Pour le bg
 			document.body.style.backgroundColor = themeColorCourse;
 			document.body.style.color = themeColorCourseInvert;
@@ -634,7 +796,6 @@ async function BetterMoodle() {
 
 			// Pour les texts
 			const text = await waitForAllElm("a, .icon, .activity-count");
-			console.log("Text : ", text);
 			text.forEach(function (elem) {
 				elem.style.color = themeColorCourseInvert;
 			});
@@ -650,6 +811,13 @@ async function BetterMoodle() {
 				elem.style.backgroundColor = `${themeColorCourse}69`;
 			});
 
+			// Pour le background des description de cours
+			const coursesDescription = await waitForAllElm(".course-description-item");
+			coursesDescription.forEach( function (elem) {
+				console.log(elem);
+				elem.style.backgroundColor = themeColorCourse;
+			});
+
 			const xpMenu = await waitForAllElm(".card");
 			xpMenu.forEach(function (elem) {
 				elem.style.backgroundColor = transparent;
@@ -658,7 +826,6 @@ async function BetterMoodle() {
 
 			const bgSecondary = await waitForAllElm(".bg-secondary");
 			bgSecondary.forEach(function (elem) {
-				// console.log(elem);
 				elem.style.cssText = `background-color: ${themeColorCourseInvert}69 !important`;
 			});
 
@@ -702,7 +869,8 @@ async function BetterMoodle() {
 		const attempt = window.location.search.split("attempt=")[1].split("&")[0];
 
 		if (pathName.includes("/attempt.php")) {
-			// Pour le chrono
+			
+			// ---------- Pour le chrono ----------
 			try {
 				const qtext = await waitForElm(".qtext");
 				const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
@@ -751,7 +919,7 @@ async function BetterMoodle() {
 				console.log("Pas de temps", e);
 			}
 
-			// Pour export dcode
+			// ---------- Pour export dcode ----------
 			try {
 				var div_info = document.querySelector(".info");
 				var d = document.createElement("div");
@@ -892,6 +1060,8 @@ async function BetterMoodle() {
 		}
 
 		if (pathName.includes("/review.php") && !window.location.href.includes("&evaluate=")) {
+			
+			// ---------- Pour la review ----------
 			try {
 				const qtext = await waitForAllElm(".qtext");
 				var chronoTotal = 0;
@@ -970,115 +1140,158 @@ async function BetterMoodle() {
 	// Il faut faire le temps + les points 
 	if (pathName.includes("/quiz/") && window.location.href.includes("&evaluate=")) {
 		
-		// Pour enlever le tableau
-		const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
-		if (pageId == 0) {
-			const recap = await waitForElm(".generaltable.generalbox.quizreviewsummary");
-			recap.remove();
-		}
+		// ---------- Pour "refaire" les evaluation ----------
+		try {
+			// Pour enlever le tableau
+			const pageId = window.location.search.split("page=")[1] == undefined ? 0 : window.location.search.split("page=")[1][0];
+			if (pageId == 0) {
+				const recap = await waitForElm(".generaltable.generalbox.quizreviewsummary");
+				recap.remove();
+			}
 
-		// ------- Pour les QCM -------
-		// Pour stocker les valeurs
-		const answer = [];
+			// ------- Pour les QCM -------
+			// Pour stocker les valeurs
+			const answer = [];
 
-		// Pour avoir les réponses 
-		document.querySelectorAll(".feedbacktrigger").forEach (function (elem) {
-			elem.parentNode.querySelectorAll(".form-control, .select.custom-select").forEach ( function (elem2) { // .form-control -> pour les question sur lesquels tu entres une valeur, .select -> pour les question ou tu choisis
-				
-				// Pour les question de type : form-control 
-				if (elem2.className.includes("form-control")) {
-					answer[elem2.id] = elem.dataset.content.split(": ")[1].split("<")[0];
-				}
-
-				// Pour les question de type : select
-				if (elem2.className.includes("select custom-select")) {
-					const correction = elem.dataset.content.split(": ")[1].split("<")[0];
+			// Pour avoir les réponses (pour les questions sans la reponse en bas)
+			document.querySelectorAll(".feedbacktrigger").forEach (function (elem) {
+				elem.parentNode.querySelectorAll(".form-control, .select.custom-select").forEach ( function (elem2) { // .form-control -> pour les question sur lesquels tu entres une valeur, .select -> pour les question ou tu choisis
 					
-					for (i = 0; i < elem2.options.length; i++) {
+					// Pour les question de type : form-control 
+					if (elem2.className.includes("form-control")) {
+						answer[elem2.id] = elem.dataset.content.split(": ")[1].split("<")[0];
+					}
+
+					// Pour les question de type : select
+					if (elem2.className.includes("select custom-select")) {
+						const correction = elem.dataset.content.split(": ")[1].split("<")[0];
 						
-						if (elem2.options[i].text === correction) {
-							console.log("Question : ", elem2.id, "Rep : ", elem2.options[i].text, "Correction : ", correction, "Index : ", i);
-							answer[elem2.id] = i;
+						for (i = 0; i < elem2.options.length; i++) {
+							
+							if (elem2.options[i].text === correction) {
+								// console.log("Question : ", elem2.id, "Rep : ", elem2.options[i].text, "Correction : ", correction, "Index : ", i);
+								answer[elem2.id] = i;
+							}
 						}
 					}
+				});
+			});
+
+			// Pour les checkmarks
+			document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
+				elem.remove();
+			});
+			
+			// Pour enlever couleurs sur les question (a droite)
+			document.querySelectorAll(".qnbutton").forEach( function(elem, idx) {
+				elem.className = "qnbutton null free btn";
+			});
+
+			// Pour faire en sorte qu'on puisse repondre
+			document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
+				elem.removeAttribute("disabled");
+				elem.removeAttribute("readonly");
+				elem.value = "";
+
+				if (elem.className.includes("select custom-select")) {
+					elem.setAttribute("selected", "0");
+					elem.addEventListener("change", function(elem2) {
+						elem2.target.setAttribute("selected", elem2.target.selectedIndex);
+					});
 				}
 			});
-		});
 
-		// Pour les checkmarks
-		document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
-			elem.remove();
-		});
-		
-		// Pour enlever couleurs sur les question (a droite)
-		document.querySelectorAll(".qnbutton").forEach( function(elem, idx) {
-			elem.className = "qnbutton null free btn";
-		});
-
-		// Pour faire en sorte qu'on puisse repondre
-		document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
-			elem.removeAttribute("disabled");
-			elem.removeAttribute("readonly");
-            elem.value = "";
-
-			if (elem.className.includes("select custom-select")) {
-				elem.setAttribute("selected", "0");
-				elem.addEventListener("change", function(elem2) {
-					elem2.target.setAttribute("selected", elem2.target.selectedIndex);
-				});
-			}
-		});
-
-		// Pour enlever les réponses
-		document.querySelectorAll("option[selected='selected']").forEach ( function (elem) {
-			elem.removeAttribute("selected");
-		});
-
-		// Pour enlever la notes sur la question (a gauche)
-		document.querySelectorAll("div[class='info']").forEach( function(elem) {
-			elem.childNodes[1].remove();
-			elem.childNodes[1].innerText = elem.childNodes[1].innerText.slice(-4) + " point(s)";
-		});
-
-		// Pour enlever les réponses (en bas)
-		document.querySelectorAll(".outcome.clearfix").forEach (function (elem) {
-			elem.remove();
-		});
-
-		// Pour les preuves
-		document.querySelectorAll(".answer.ordering").forEach (function (elem) {
-			elem.childNodes[0].childNodes.forEach (function (elem) {
-				elem.childNodes[0].remove();
-				elem.removeAttribute("class");   
+			// Pour enlever les réponses
+			document.querySelectorAll("option[selected='selected']").forEach ( function (elem) {
+				elem.removeAttribute("selected");
 			});
-		});
 
-		// Desactiver l'affichage 1 réponse / page et changer le "Terminer" en "Valider"
-		document.querySelector(".othernav").childNodes[0].outerHTML = '<button class="finish" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px; margin-bottom: 10px;">Terminer</button><br>';
-		// inserer pour la fin de l'examen
+			// Pour enlever la notes sur la question (a gauche)
+			document.querySelectorAll("div[class='info']").forEach( function(elem) {
+				elem.childNodes[1].remove();
+				elem.childNodes[1].innerText = elem.childNodes[1].innerText.slice(-4) + " point(s)";
+			});
 
-		document.querySelectorAll(".mod_quiz-next-nav").forEach ( function (elem) {
-			elem.outerHTML = '<button class="mod_quiz-next-nav" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px;">Vérifier</button>';
-		})
+			// Pour enlever les réponses (en bas)
+			document.querySelectorAll(".outcome.clearfix").forEach (function (elem) {
+				elem.remove();
+			});
 
-		// Pour verifier les reponses
-		document.querySelectorAll(".mod_quiz-next-nav").forEach( function(elem2) {
-			elem2.addEventListener("click", function() {
+			// Pour les preuves
+			document.querySelectorAll(".answer.ordering").forEach (function (elem) {
+				elem.childNodes[0].childNodes.forEach (function (elem) {
+					elem.childNodes[0].remove();
+					elem.removeAttribute("class");   
+				});
+			});
 
+			// Desactiver l'affichage 1 réponse / page et changer le "Terminer" en "Valider"
+			document.querySelector(".othernav").childNodes[0].outerHTML = '<button class="finish" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px; margin-bottom: 10px;">Terminer</button><br>';
+			// inserer pour la fin de l'examen
+
+			document.querySelectorAll(".mod_quiz-next-nav").forEach ( function (elem) {
+				elem.outerHTML = '<button class="mod_quiz-next-nav" style="background-color: #ffffff; border: 1px solid gray; border-radius: 8px;">Vérifier</button>';
+			})
+
+			// Pour verifier les reponses
+			document.querySelectorAll(".mod_quiz-next-nav").forEach( function(elem2) {
+				elem2.addEventListener("click", function() {
+
+					// Pour remove les checkmarks
+					document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
+						elem.remove();
+					});
+
+					// Pour les question libre
+					document.querySelectorAll(".form-control").forEach ( function (elem) {
+						const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+						if (elem.value == answer[elem.id]) {
+							a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+							elem.setAttribute("readonly", "true");
+						}
+						else {
+							a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+						}
+					});
+
+					// Pour les question de selection
+					document.querySelectorAll(".select.custom-select").forEach ( function (elem) {
+						const a = elem.parentNode.insertBefore(document.createElement("a"), null);
+						if (elem.selectedIndex == answer[elem.id]) {
+							a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
+							elem.setAttribute("disabled", "disabled");
+						}
+						else {
+							a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+						}
+					});
+
+					// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
+				});
+			})
+
+			// Pour finir l'exam et afficher les résultats
+			document.querySelector(".finish").addEventListener("click", function() {
+				
 				// Pour remove les checkmarks
 				document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
 					elem.remove();
 				});
 
-				// Pour les question libre
+				// Pour faire en sorte qu'on puisse plus repondre
+				document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
+					elem.setAttribute("disabled", "true");
+					elem.setAttribute("readonly", "true");
+				});
+
+				// Pour les question basiques 
 				document.querySelectorAll(".form-control").forEach ( function (elem) {
 					const a = elem.parentNode.insertBefore(document.createElement("a"), null);
 					if (elem.value == answer[elem.id]) {
-						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
-						elem.setAttribute("readonly", "true");
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
 					}
 					else {
-						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${answer[elem.id]}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
 					}
 				});
 
@@ -1087,57 +1300,21 @@ async function BetterMoodle() {
 					const a = elem.parentNode.insertBefore(document.createElement("a"), null);
 					if (elem.selectedIndex == answer[elem.id]) {
 						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
-						elem.setAttribute("disabled", "disabled");
 					}
 					else {
-						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
+						const correct = elem.options[answer[elem.id]].text;
+						a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${correct}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
 					}
 				});
 
 				// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
 			});
-		})
-
-		// Pour finir l'exam et afficher les résultats
-		document.querySelector(".finish").addEventListener("click", function() {
-			
-			// Pour remove les checkmarks
-			document.querySelectorAll(".feedbacktrigger.btn.btn-link.p-0, .icon.fa").forEach ( function (elem) {
-				elem.remove();
-			});
-
-			// Pour faire en sorte qu'on puisse plus repondre
-			document.querySelectorAll(".select.custom-select, .form-control").forEach ( function (elem) {
-				elem.setAttribute("disabled", "true");
-				elem.setAttribute("readonly", "true");
-			});
-
-			// Pour les question basiques 
-			document.querySelectorAll(".form-control").forEach ( function (elem) {
-				const a = elem.parentNode.insertBefore(document.createElement("a"), null);
-				if (elem.value == answer[elem.id]) {
-					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
-				}
-				else {
-					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${answer[elem.id]}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
-				}
-			});
-
-			// Pour les question de selection
-			document.querySelectorAll(".select.custom-select").forEach ( function (elem) {
-				const a = elem.parentNode.insertBefore(document.createElement("a"), null);
-				if (elem.selectedIndex == answer[elem.id]) {
-					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-check text-success fa-fw ' title='Correct' role='img' aria-label='Correct'></i></a>`;
-				}
-				else {
-					const correct = elem.options[answer[elem.id]].text;
-					a.outerHTML = `<a role='button' tabindex='0' class='feedbacktrigger btn btn-link p-0' data-toggle='popover' data-container='body' data-content='<span class=&quot;feedbackspan&quot;>Incorrect<br />La réponse correcte est&nbsp;: ${correct}' data-placement='right' data-trigger='hover focus' data-html='true' href='#'><i class='icon fa fa-remove text-danger fa-fw ' title='Incorrect' role='img' aria-label='Incorrect'></i></a>`;
-				}
-			});
-
-			// Pour les états de la mémoire (faire avec 48/68 bonne réponses ect...)
-		});
+		}
+		catch (e) {
+			console.log("Probleme refaire\n", e);
+		}
 	}
 }
 
+// Pour lancer BetterMoodle
 BetterMoodle();
