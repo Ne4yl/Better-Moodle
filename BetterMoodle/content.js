@@ -239,6 +239,26 @@ function updateTheme (themeName, propretie, value) {
 	return themes, updatedTheme;
 }
 
+function updateThemeHTML (themeName) {
+	// Pour recuperer les themes
+	const themes = localStorage.getItem("themes") ? new Map(JSON.parse(localStorage.getItem("themes"))) : new Map();
+	var newCurrTheme = themes.get(themeName) ? new Map(JSON.parse(themes.get(themeName))) : new Map();
+
+	// Pour mettre a jour les inputs des backgrounds 
+	document.querySelectorAll(".inputImg").forEach(function (elem) {
+		elem.value = newCurrTheme.get(`BackgroundURL_${elem.className.split(" ")[1]}`);
+	});
+
+	// Pour mettre a jour les couleurs
+	document.querySelectorAll(".colorPicker").forEach(function (elem) {
+		elem.value = newCurrTheme.get(`${elem.className.split(" ")[1]}ThemeColor`);
+	});
+
+	document.querySelectorAll('.colorPicker').forEach(function (elem) {
+		elem.dispatchEvent(new Event('input', { bubbles: true }));
+	});
+}
+
 async function BetterMoodle() {
 	
 	// -------------------- Variables / Constantes --------------------
@@ -275,7 +295,7 @@ async function BetterMoodle() {
 
 				// Pour fixer le login au centre malgrès le BetterMoodle
 				document.querySelector("#page").style.position = "absolute";
-				// document.querySelector("#page").style.bottom = "36%";
+				document.querySelector("#page").style.bottom = "36%";
 
 				// Pour changer la couleur du fond du login
 				document.getElementsByClassName("login-container login-container-80t")[0].style.backgroundColor = "rgba(0, 0, 0, 0.7)";
@@ -325,6 +345,7 @@ async function BetterMoodle() {
 				// Creation de la div du menu et de son style
 				const BetterMoodle = document.createElement("div");
 				BetterMoodle.id = "BetterMoodleMenu";
+				BetterMoodle.style.visibility = "hidden";
 
 				// ---------- Creation du menu de BetterMoodle ----------
 				// Le titre
@@ -378,7 +399,7 @@ async function BetterMoodle() {
 				InputThemeSlector.checked = localStorage.getItem("IsTheme") === 'true';
 
 				InputThemeSlector.addEventListener("change", function () {
-					currentTheme.set("IsTheme", InputThemeSlector.checked);
+					localStorage.setItem("IsTheme", InputThemeSlector.checked);
 					DivTheme.style.display = !InputThemeSlector.checked ? "none" : "block";
 				});
 
@@ -457,14 +478,6 @@ async function BetterMoodle() {
 				button.style.borderRadius = '4px';
 				button.style.cursor = 'pointer';
 
-				// Pour le bouton save
-				button.addEventListener('click', () => {
-					console.log(currentTheme);
-					themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
-					themes.set("current", JSON.stringify(Array.from(currentTheme.entries())));
-					localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
-				});
-
 				// Ajoutez les éléments au conteneur
 				container.appendChild(input);
 				container.appendChild(button);
@@ -481,10 +494,14 @@ async function BetterMoodle() {
 				select.style.border = '1px solid #ccc';
 				select.style.borderRadius = '4px';
 
-				for (const [key, value] of themes.entries()) {
+				var option = document.createElement('option');
+				option.textContent = "";
+				select.appendChild(option);
+
+				for (const [key,] of themes.entries()) {
 					if (key == "current") continue;
 					const option = document.createElement('option');
-					option.value = value;
+					option.value = key;
 					option.textContent = key;
 					select.appendChild(option);
 				};
@@ -512,59 +529,95 @@ async function BetterMoodle() {
 					formatToggle: true,
 					alpha: false,
 				});
-			}
 
-			document.addEventListener('coloris:pick', event => {
-				themes, currentTheme = updateTheme("current", `${event.detail.currentEl.className.split(" ")[1]}ThemeColor`, event.detail.color);
-				console.log("Themes : ", themes, "Current theme : ", currentTheme);
-			});
+				// Pour la selection des couleurs
+				document.addEventListener('coloris:pick', event => {
+					themes, currentTheme = updateTheme("current", `${event.detail.currentEl.className.split(" ")[1]}ThemeColor`, event.detail.color);
+					console.log("Themes : ", themes, "Current theme : ", currentTheme);
+				});
 
-			var ImgButton = document.querySelectorAll(".inputImg");
-			ImgButton.forEach(function (inputs) {
-				inputs.addEventListener("keyup", (event) => {
-					if (event.keyCode == 13) {
-						// Pour mettre a jour les themes
-						themes, currentTheme = updateTheme("current", `BackgroundURL_${selection}`, `url("${inputs.value}")`);
-						
-						// Pour changer le background
-						var selection = inputs.className.split(" ")[1];
-						inputs.value = "";
-						inputs.placeholder = "Loaded";
-						inputs.blur();
+				// Pour le bouton save
+				button.addEventListener('click', () => {
+					console.log(currentTheme);
+					themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
+					themes.set("current", JSON.stringify(Array.from(currentTheme.entries())));
+					localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
 
-						if (selection == "login")
-							document.getElementById("page-login-index").style.backgroundImage = currentTheme.get("BackgroundURL_login");
+					// Pour ajouter le theme dans le select
+					const option = document.createElement('option');
+					option.value = input.value;
+					option.textContent = input.value;
+					option.selected = true;
+					select.appendChild(option);
+				});
+
+				// Pour la selection du theme
+				select.addEventListener("change", function () {
+					const selectedTheme = select.value;
+					
+					// Pour mettre a jour le theme 
+					if (selectedTheme != "" && themes.get(selectedTheme)) {
+					currentTheme = themes.get(selectedTheme) ? new Map(JSON.parse(themes.get(selectedTheme))) : console.warn("Le theme selectionné n'existe pas");
+					themes.set("current", JSON.stringify(Array.from(currentTheme.entries())));
+					localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
+					console.log("Theme updated : ", selectedTheme);
+
+					updateThemeHTML(selectedTheme);
 					}
 				});
-			});
 
-			// --------------------- Pour le menu ---------------------
-			document.addEventListener("keypress", logKey);
-			let queue = [];
-			var count = 0;
+				var ImgButton = document.querySelectorAll(".inputImg");
+				ImgButton.forEach(function (inputs) {
+					inputs.addEventListener("keyup", (event) => {
+						if (event.keyCode == 13) {
+							// Pour changer le background
+							var selection = inputs.className.split(" ")[1];
 
-			function logKey(e) {
-				queue.push(e.code);
-				if (queue.length > 6) {
-					queue.shift();
-				}
+							// Pour mettre a jour les themes
+							themes, currentTheme = updateTheme("current", `BackgroundURL_${selection}`, `url("${inputs.value}")`);
 
-				if (queue.toString().replaceAll("Key", "") == "B,E,T,T,E,R") {
-					if (count % 2 == 0) {
-						document.getElementById("Better Moodle").style.visibility = "visible";
+							inputs.value = "";
+							inputs.placeholder = "Loaded";
+							inputs.blur();
+							
+							console.log("Themes : ", themes, "Current theme : ", currentTheme);
+							if (selection == "login")
+								document.getElementById("page-login-index").style.backgroundImage = currentTheme.get("BackgroundURL_login");
+						}
+					});
+				});
+
+				// --------------------- Pour le menu ---------------------
+				document.addEventListener("keypress", logKey);
+				let queue = [];
+				var count = 0;
+
+				function logKey(e) {
+					queue.push(e.code);
+					if (queue.length > 6) {
+						queue.shift();
 					}
-					if (count % 2 == 1) {
-						document.getElementById("Better Moodle").style.visibility = "hidden";
+
+					if (queue.toString().replaceAll("Key", "") == "B,E,T,T,E,R") {
+						if (count % 2 == 0) {
+							document.querySelector("#page").style.visibility = "hidden";
+							document.getElementById("BetterMoodleMenu").style.visibility = "visible";
+						}
+						if (count % 2 == 1) {
+							document.getElementById("BetterMoodleMenu").style.visibility = "hidden";
+							document.querySelector("#page").style.visibility = "visible";
+
+						}
+						count++;
 					}
-					count++;
 				}
 			}
 
-			window.addEventListener("beforeunload", function () {
-				console.log(currentTheme);
-				themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
-				localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
-			});
+			// window.addEventListener("beforeunload", function () {
+			// 	console.log(currentTheme);
+			// 	themes.set(input.value, JSON.stringify(Array.from(currentTheme.entries())));
+			// 	localStorage.setItem("themes", JSON.stringify(Array.from(themes.entries())));
+			// });
 
 		} catch (e) {
 			console.log(e);
@@ -781,86 +834,88 @@ async function BetterMoodle() {
 		const themeColorCourse = "#202020";
 		const themeColorCourseInvert = invertColor(themeColorCourse);
 
-		try {
+		if (localStorage.getItem("IsTheme") === 'true') {
+			try {
 
-			// Pour le bg
-			document.body.style.backgroundColor = themeColorCourse;
-			document.body.style.color = themeColorCourseInvert;
+				// Pour le bg
+				document.body.style.backgroundColor = themeColorCourse;
+				document.body.style.color = themeColorCourseInvert;
 
-			document.getElementById("region-main").style.backgroundColor = transparent;
-			document.getElementById("topofscroll").style.backgroundColor = transparent;
+				document.getElementById("region-main").style.backgroundColor = transparent;
+				document.getElementById("topofscroll").style.backgroundColor = transparent;
 
-			document.querySelectorAll(".navigation, .nav-tabs").forEach(function (elem) {
-				elem.style.backgroundColor = transparent;
-			});
-
-			// Pour les texts
-			const text = await waitForAllElm("a, .icon, .activity-count");
-			text.forEach(function (elem) {
-				elem.style.color = themeColorCourseInvert;
-			});
-
-			const xpText = await waitForAllElm(".block_xp *");
-			xpText.forEach(function (elem) {
-				elem.style.cssText = `color: ${themeColorCourseInvert} !important`;
-			});
-
-			// Pour le menu de navigation de droite
-			const rightMenu = await waitForAllElm(".drawer");
-			rightMenu.forEach(function (elem) {
-				elem.style.backgroundColor = `${themeColorCourse}69`;
-			});
-
-			// Pour le background des description de cours
-			const coursesDescription = await waitForAllElm(".course-description-item");
-			coursesDescription.forEach( function (elem) {
-				console.log(elem);
-				elem.style.backgroundColor = themeColorCourse;
-			});
-
-			const xpMenu = await waitForAllElm(".card");
-			xpMenu.forEach(function (elem) {
-				elem.style.backgroundColor = transparent;
-				elem.style.border = `1px solid ${themeColorCourseInvert}`;
-			});
-
-			const bgSecondary = await waitForAllElm(".bg-secondary");
-			bgSecondary.forEach(function (elem) {
-				elem.style.cssText = `background-color: ${themeColorCourseInvert}69 !important`;
-			});
-
-			// Pour le menu d'info de l'xp
-			const xpInfo = await waitForElm(".alert-info");
-			xpInfo.style.backgroundColor = `${themeColorCourseInvert}3d`;
-
-			// Les boutons
-			document.querySelectorAll(".btn").forEach(function (elem) {
-				if (elem.className == "btn dropdown-toggle") return;
-				if (elem.className.includes("dropdown-toggle")) {
-					elem.style.backgroundColor = `${themeColorCourse}69`;
-					elem.style.color = themeColorCourseInvert;
-					return;
-				}
-				elem.style.backgroundColor = `${invertColor(themeColorCourse)}69`;
-			});
-
-			// Pour la selection dans le cours
-			// document.styleSheets[5].cssRules.forEach(function (elem) {
-			// 	if (elem.selectorText && (elem.selectorText.includes(".moremenu .nav-link:hover") || elem.selectorText.includes(".moremenu .nav-link.active:hover"))) {
-			// 		elem.style.backgroundColor = `${themeColorCourseInvert}69`;
-			// 	}
-			// });
-
-			// Pour les hover
-			document.querySelectorAll(".nav-link, .moremenu").forEach( function (elem) {
-				elem.on("hover", function () {
-					console.log("hover");
+				document.querySelectorAll(".navigation, .nav-tabs").forEach(function (elem) {
 					elem.style.backgroundColor = transparent;
-				//elem.style.cssText = `.moremenu .nav-link:hover,.moremenu .nav-link:focus {border-color: #7f252500; background-color: ${themeColorCourseInvert}a9;}`;
 				});
-			});
-		} catch (e) {
-			console.log("Theme dans le cour\n", e);
+
+				// Pour les texts
+				const text = await waitForAllElm("a, .icon, .activity-count");
+				text.forEach(function (elem) {
+					elem.style.color = themeColorCourseInvert;
+				});
+
+				const xpText = await waitForAllElm(".block_xp *");
+				xpText.forEach(function (elem) {
+					elem.style.cssText = `color: ${themeColorCourseInvert} !important`;
+				});
+
+				// Pour le menu de navigation de droite
+				const rightMenu = await waitForAllElm(".drawer");
+				rightMenu.forEach(function (elem) {
+					elem.style.backgroundColor = `${themeColorCourse}69`;
+				});
+
+				// Pour le background des description de cours
+				const coursesDescription = await waitForAllElm(".course-description-item");
+				coursesDescription.forEach( function (elem) {
+					console.log(elem);
+					elem.style.backgroundColor = themeColorCourse;
+				});
+
+				const xpMenu = await waitForAllElm(".card");
+				xpMenu.forEach(function (elem) {
+					elem.style.backgroundColor = transparent;
+					elem.style.border = `1px solid ${themeColorCourseInvert}`;
+				});
+
+				const bgSecondary = await waitForAllElm(".bg-secondary");
+				bgSecondary.forEach(function (elem) {
+					elem.style.cssText = `background-color: ${themeColorCourseInvert}69 !important`;
+				});
+
+				// Pour le menu d'info de l'xp
+				const xpInfo = await waitForElm(".alert-info");
+				xpInfo.style.backgroundColor = `${themeColorCourseInvert}3d`;
+
+				// Les boutons
+				document.querySelectorAll(".btn").forEach(function (elem) {
+					if (elem.className == "btn dropdown-toggle") return;
+					if (elem.className.includes("dropdown-toggle")) {
+						elem.style.backgroundColor = `${themeColorCourse}69`;
+						elem.style.color = themeColorCourseInvert;
+						return;
+					}
+					elem.style.backgroundColor = `${invertColor(themeColorCourse)}69`;
+				});
+
+				// Pour la selection dans le cours
+				// document.styleSheets[5].cssRules.forEach(function (elem) {
+				// 	if (elem.selectorText && (elem.selectorText.includes(".moremenu .nav-link:hover") || elem.selectorText.includes(".moremenu .nav-link.active:hover"))) {
+				// 		elem.style.backgroundColor = `${themeColorCourseInvert}69`;
+				// 	}
+				// });
+
+				// Pour les hover
+				document.querySelectorAll(".nav-link, .moremenu").forEach( function (elem) {
+					elem.on("hover", function () {
+						console.log("hover");
+						elem.style.backgroundColor = transparent;
+					//elem.style.cssText = `.moremenu .nav-link:hover,.moremenu .nav-link:focus {border-color: #7f252500; background-color: ${themeColorCourseInvert}a9;}`;
+					});
+				});
+			} catch (e) {
+				console.log("Theme dans le cour\n", e);
+			}
 		}
 	}
 
